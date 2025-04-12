@@ -74,6 +74,11 @@ knitr::include_graphics("a_ggram0.png")
 
 Notes:  ggram::ggram() fails given the string replacement in the current implementation...
 
+```{r}
+library(tidyverse)
+
+```
+
 
 ```{r clearhistory}
 clearhistory <- function() {
@@ -93,8 +98,9 @@ clearhistory <- function() {
 
 # readLines(temp) |> flipbookr:::code_parse()
 
-#' @importFrom dplyr mutate group_by filter
-#' @importFrom stringr str_remove str_split
+#' @importFrom dplyr mutate group_by filter row_number
+#' @importFrom stringr str_remove str_split str_detect
+#' @importFrom tidyr unnest
 
 compute_panel_code <- function(data, scales){
   
@@ -202,21 +208,11 @@ stamp_punched_holes <- function(){
 
 ```
 
+```{r code_df_to_code_plot}
 
-## ggram with patchwork
-
-
-
-```{r ggram}
-#' @export
-ggram <- function(title = NULL, widths = c(1,1), ...){
+code_df_to_code_plot <- function(code_df){
   
-  temp <- tempfile()
-  savehistory(file = ".Rhistory")
-
-  plot <- last_plot()
-  
-  code_file_to_code_df() |>
+  code_df |>
   ggplot() +
     aes(code = code) +
     stamp_notebook() +
@@ -226,9 +222,32 @@ ggram <- function(title = NULL, widths = c(1,1), ...){
     geom_text(stat = StatCode, alpha = .7, family = "mono") +
     geom_text(stat = StatCodeLineNumbers, family = "mono") +
     theme(legend.position = "none") + 
-    stamp_punched_holes() +
-    NULL ->
-  code_plot
+    stamp_punched_holes()
+  
+}
+```
+
+
+```{r}
+code_file_to_code_df() |>
+  code_df_to_code_plot()
+```
+
+
+## ggram with patchwork
+
+```{r ggram}
+#' @export
+ggram <- function(title = NULL, widths = c(1,1), ...){
+  
+  temp <- tempfile()
+  savehistory(file = temp)
+
+  plot <- last_plot()
+  
+  code_plot <- code_file_to_code_df(temp) |>
+    code_df_to_code_plot()
+  
   
   code_plot + plot + patchwork::plot_layout(widths = widths) +
     patchwork::plot_annotation(title = title, ...) & 
@@ -271,10 +290,11 @@ usethis::use_package("patchwork")
 usethis::use_package("stringr")
 usethis::use_package("styler")
 usethis::use_package("dplyr")
+usethis::use_package("tidyr")
 
 
 # knitrExtra::chunk_names_get()
-knitrExtra::chunk_to_dir(c("clearhistory", "StatCode", "stamp_notebook", "ggram", "code_file_to_code_df"))
+knitrExtra::chunk_to_dir(c("clearhistory", "StatCode", "stamp_notebook", "ggram", "code_file_to_code_df", "code_df_to_code_plot"))
 ```
 
 ```{r, eval = F}

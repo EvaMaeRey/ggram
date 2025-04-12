@@ -62,6 +62,10 @@ Notes: ggram::ggram() fails given the string replacement in the current
 implementation…
 
 ``` r
+library(tidyverse)
+```
+
+``` r
 clearhistory <- function() {
   
   temp <- tempfile()
@@ -79,8 +83,9 @@ clearhistory <- function() {
 
 # readLines(temp) |> flipbookr:::code_parse()
 
-#' @importFrom dplyr mutate group_by filter
-#' @importFrom stringr str_remove str_split
+#' @importFrom dplyr mutate group_by filter row_number
+#' @importFrom stringr str_remove str_split str_detect
+#' @importFrom tidyr unnest
 
 compute_panel_code <- function(data, scales){
   
@@ -141,8 +146,8 @@ code_file_to_code_df <- function(filepath = ".Rhistory"){
 ``` r
 code_file_to_code_df() |> 
   compute_panel_code()
-#> # A tibble: 60 × 7
-#> # Groups:   row [4]
+#> # A tibble: 4,058 × 7
+#> # Groups:   row [155]
 #>    code    row is_highlighted     x is_character is_code label
 #>    <chr> <int> <lgl>          <int> <lgl>        <lgl>   <chr>
 #>  1 g         1 FALSE              1 TRUE         TRUE    g    
@@ -155,7 +160,7 @@ code_file_to_code_df() |>
 #>  8 c         1 FALSE              8 TRUE         TRUE    c    
 #>  9 a         1 FALSE              9 TRUE         TRUE    a    
 #> 10 r         1 FALSE             10 TRUE         TRUE    r    
-#> # ℹ 50 more rows
+#> # ℹ 4,048 more rows
 
 code_file_to_code_df() |>
   ggplot() + 
@@ -165,7 +170,7 @@ code_file_to_code_df() |>
   scale_y_reverse()
 ```
 
-<img src="man/figures/README-unnamed-chunk-5-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-6-1.png" width="100%" />
 
 # `stamp_notebook`
 
@@ -202,18 +207,11 @@ stamp_punched_holes <- function(){
 }
 ```
 
-## ggram with patchwork
-
 ``` r
-#' @export
-ggram <- function(title = NULL, widths = c(1,1), ...){
-  
-  temp <- tempfile()
-  savehistory(file = ".Rhistory")
 
-  plot <- last_plot()
+code_df_to_code_plot <- function(code_df){
   
-  code_file_to_code_df() |>
+  code_df |>
   ggplot() +
     aes(code = code) +
     stamp_notebook() +
@@ -223,9 +221,32 @@ ggram <- function(title = NULL, widths = c(1,1), ...){
     geom_text(stat = StatCode, alpha = .7, family = "mono") +
     geom_text(stat = StatCodeLineNumbers, family = "mono") +
     theme(legend.position = "none") + 
-    stamp_punched_holes() +
-    NULL ->
-  code_plot
+    stamp_punched_holes()
+  
+}
+```
+
+``` r
+code_file_to_code_df() |>
+  code_df_to_code_plot()
+```
+
+<img src="man/figures/README-unnamed-chunk-7-1.png" width="100%" />
+
+## ggram with patchwork
+
+``` r
+#' @export
+ggram <- function(title = NULL, widths = c(1,1), ...){
+  
+  temp <- tempfile()
+  savehistory(file = temp)
+
+  plot <- last_plot()
+  
+  code_plot <- code_file_to_code_df(temp) |>
+    code_df_to_code_plot()
+  
   
   code_plot + plot + patchwork::plot_layout(widths = widths) +
     patchwork::plot_annotation(title = title, ...) & 
@@ -265,10 +286,11 @@ usethis::use_package("patchwork")
 usethis::use_package("stringr")
 usethis::use_package("styler")
 usethis::use_package("dplyr")
+usethis::use_package("tidyr")
 
 
 # knitrExtra::chunk_names_get()
-knitrExtra::chunk_to_dir(c("clearhistory", "StatCode", "stamp_notebook", "ggram", "code_file_to_code_df"))
+knitrExtra::chunk_to_dir(c("clearhistory", "StatCode", "stamp_notebook", "ggram", "code_file_to_code_df", "code_df_to_code_plot"))
 ```
 
 ``` r

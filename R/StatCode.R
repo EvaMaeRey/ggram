@@ -1,8 +1,9 @@
 
 # readLines(temp) |> flipbookr:::code_parse()
 
-#' @importFrom dplyr mutate group_by filter
-#' @importFrom stringr str_remove str_split
+#' @importFrom dplyr mutate group_by filter row_number
+#' @importFrom stringr str_remove str_split str_detect
+#' @importFrom tidyr unnest
 
 compute_panel_code <- function(data, scales){
   

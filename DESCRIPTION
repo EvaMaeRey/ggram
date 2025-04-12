@@ -15,4 +15,5 @@ Imports:
     ggplot2,
     patchwork,
     stringr,
-    styler
+    styler,
+    tidyr
