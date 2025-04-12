@@ -17,9 +17,10 @@
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
-`ggram` explores a code-output side-by-side for sharing bite-sized
-how-tos. The specific motivation is to easily feature ggplot2 extenders
-work - which so often *transform* user experience.
+`ggram` explores a method for creating a *quick* code-output
+side-by-side for sharing bite-sized how-tos. The specific motivation is
+to easily feature ggplot2 extenders work - which so often *transform*
+user experience.
 
 We’re in the proof-of-concept phase (expect fragility), but the idea is:
 
