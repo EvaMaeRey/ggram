@@ -28,3 +28,24 @@ stamp_punched_holes <- function(){
 }
 
 
+stamp_graph_paper <- function(){
+  
+  list(
+    
+    theme_void(),
+    theme(plot.background = element_rect(fill = alpha("whitesmoke", .1))),
+    scale_y_reverse(limits = c(-1, 20)),
+    # coord_equal(),
+    scale_x_continuous(limits = c(-3, 35)),
+    # annotate("rect", xmin = -Inf, xmax = 0, ymin = -Inf, ymax = Inf, 
+             # fill = alpha("grey90", .1)),
+    geom_vline(xintercept = -3:35, color = "blue", alpha = .5, linewidth = .2) ,
+    geom_hline(yintercept = -1:29 + .5, color = "blue", linewidth = .2, alpha = .5),
+    NULL
+  )
+  
+}
+
+
+
+

@@ -79,6 +79,8 @@ clearhistory <- function() {
 
 # `StatCode` & `StatCodeLineNumbers`
 
+<details>
+
 ``` r
 
 # readLines(temp) |> flipbookr:::code_parse()
@@ -128,6 +130,8 @@ StatCodeLineNumbers <- ggproto("StatCodeLineNumbers", Stat,
                     )
 ```
 
+</details>
+
 # `code_file_to_code_df`
 
 ``` r
@@ -135,15 +139,26 @@ code_file_to_code_df <- function(filepath = ".Rhistory"){
   
   readLines(filepath) |> 
     paste(collapse = "\n") |> 
-    stringr::str_remove("ggram\\(.+\\)|ggram\\(\\)") |>
     styler::style_text() |> 
     as.character() |>
-    data.frame(code = _) 
+    data.frame(code = _) |>
+    filter(!stringr::str_detect(code, "^ggram.+"))
   
 }
 ```
 
 ``` r
+# ggram:::clearhistory()
+
+ggplot(cars) + 
+  aes(speed, dist) + 
+  geom_point()
+```
+
+<img src="man/figures/README-unnamed-chunk-6-1.png" width="100%" />
+
+``` r
+
 code_file_to_code_df() |> 
   compute_panel_code()
 #> # A tibble: 4,058 × 7
@@ -170,7 +185,7 @@ code_file_to_code_df() |>
   scale_y_reverse()
 ```
 
-<img src="man/figures/README-unnamed-chunk-6-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-6-2.png" width="100%" />
 
 # `stamp_notebook`
 
@@ -205,7 +220,42 @@ stamp_punched_holes <- function(){
    )
   
 }
+
+
+stamp_graph_paper <- function(){
+  
+  list(
+    
+    theme_void(),
+    theme(plot.background = element_rect(fill = alpha("whitesmoke", .1))),
+    scale_y_reverse(limits = c(-1, 20)),
+    # coord_equal(),
+    scale_x_continuous(limits = c(-3, 35)),
+    # annotate("rect", xmin = -Inf, xmax = 0, ymin = -Inf, ymax = Inf, 
+             # fill = alpha("grey90", .1)),
+    geom_vline(xintercept = -3:35, color = "blue", alpha = .5, linewidth = .2) ,
+    geom_hline(yintercept = -1:29 + .5, color = "blue", linewidth = .2, alpha = .5),
+    NULL
+  )
+  
+}
 ```
+
+``` r
+ggplot() + 
+  stamp_notebook() + 
+  stamp_punched_holes()
+```
+
+<img src="man/figures/README-unnamed-chunk-7-1.png" width="100%" />
+
+``` r
+
+ggplot() + 
+  stamp_graph_paper()
+```
+
+<img src="man/figures/README-unnamed-chunk-7-2.png" width="100%" />
 
 ``` r
 
@@ -218,7 +268,7 @@ code_df_to_code_plot <- function(code_df){
     geom_tile(stat = StatCode) + 
     scale_fill_manual(values = c(alpha("grey90",.4), alpha("yellow", .4)), 
                       breaks = c(FALSE, TRUE)) +
-    geom_text(stat = StatCode, alpha = .7, family = "mono") +
+    geom_text(stat = StatCode, alpha = .7, family = "mono", fontface = "italic") +
     geom_text(stat = StatCodeLineNumbers, family = "mono") +
     theme(legend.position = "none") + 
     stamp_punched_holes()
@@ -231,7 +281,7 @@ code_file_to_code_df() |>
   code_df_to_code_plot()
 ```
 
-<img src="man/figures/README-unnamed-chunk-7-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />
 
 ## ggram with patchwork
 
@@ -248,7 +298,7 @@ ggram <- function(title = NULL, widths = c(1,1), ...){
     code_df_to_code_plot()
   
   
-  code_plot + plot + patchwork::plot_layout(widths = widths) +
+  patchwork::free(code_plot) + plot + patchwork::plot_layout(widths = widths) +
     patchwork::plot_annotation(title = title, ...) & 
     theme(plot.background = element_rect(colour = "black", linewidth = .05))
   
@@ -296,4 +346,8 @@ knitrExtra::chunk_to_dir(c("clearhistory", "StatCode", "stamp_notebook", "ggram"
 ``` r
 devtools::check(".")
 devtools::install(pkg = ".", upgrade = "never") 
+```
+
+``` r
+knitr::knit_exit()
 ```
