@@ -66,6 +66,7 @@ library(tidyverse)
 ```
 
 ``` r
+#' @export
 clearhistory <- function() {
   
   temp <- tempfile()
@@ -268,7 +269,7 @@ code_df_to_code_plot <- function(code_df){
     geom_tile(stat = StatCode) + 
     scale_fill_manual(values = c(alpha("grey90",.4), alpha("yellow", .4)), 
                       breaks = c(FALSE, TRUE)) +
-    geom_text(stat = StatCode, alpha = .7, family = "mono", fontface = "italic") +
+    geom_text(stat = StatCode, alpha = .7, family = "mono") +
     geom_text(stat = StatCodeLineNumbers, family = "mono") +
     theme(legend.position = "none") + 
     stamp_punched_holes()
@@ -303,6 +304,83 @@ ggram <- function(title = NULL, widths = c(1,1), ...){
     theme(plot.background = element_rect(colour = "black", linewidth = .05))
   
 }
+
+#' @export
+ggram_df_output <- function(title = NULL, widths = c(1,1), ...){
+  
+  temp <- tempfile()
+  savehistory(file = temp)
+
+  readLines(temp)[!stringr::str_detect(readLines(temp), "ggram")] |>  
+  paste(collapse = "\n") ->
+    code
+  
+  code_plot <- code_file_to_code_df(temp) |>
+    code_df_to_code_plot()
+  
+  eval(parse(text = code)) -> output
+  
+  
+  patchwork::free(code_plot) + gt::gt(output) + patchwork::plot_layout(widths = widths) +
+  patchwork::plot_annotation(title = title, ...) & 
+  theme(plot.background = element_rect(colour = "black", linewidth = .05))
+    
+}
+
+#' @export
+ggram_tp_output <- function(title = NULL, widths = c(1,1), ...){
+  
+  temp <- tempfile()
+  savehistory(file = temp)
+
+  readLines(temp)[!stringr::str_detect(readLines(temp), "ggram")] |>  
+  paste(collapse = "\n") ->
+    code
+  
+  code_plot <- code_file_to_code_df(temp) |>
+    code_df_to_code_plot()
+  
+  eval(parse(text = code)) |> tidypivot::collect() -> output
+  
+  
+  patchwork::free(code_plot) + gt::gt(output) + patchwork::plot_layout(widths = widths) +
+  patchwork::plot_annotation(title = title, ...) & 
+  theme(plot.background = element_rect(colour = "black", linewidth = .05))
+    
+}
+
+
+#' @export
+ggram_text_output <- function(title = NULL, widths = c(1,1), ...){
+  
+  temp <- tempfile()
+  savehistory(file = temp)
+
+  readLines(temp)[!stringr::str_detect(readLines(temp), "ggram")] |>  
+  paste(collapse = "\n") ->
+    code
+  
+  code_plot <- code_file_to_code_df(temp) |>
+    code_df_to_code_plot()
+  
+  capture.output(eval(parse(text = code))) -> output
+  
+  output |>
+    data.frame(code = _) |>
+      dplyr::mutate(row_number = dplyr::row_number()) |>
+      ggplot() + 
+      aes(x = 1, 
+          y = row_number, 
+          label = code) +
+      geom_text(hjust = 0, family = "mono") +
+    stamp_notebook() ->
+    text_output_plot
+  
+  patchwork::free(code_plot) + text_output_plot + patchwork::plot_layout(widths = widths) +
+  patchwork::plot_annotation(title = title, ...) & 
+  theme(plot.background = element_rect(colour = "black", linewidth = .05))
+    
+}
 ```
 
 ``` r
@@ -316,6 +394,24 @@ ggplot(cars) +
 ggram()
 
 ggsave(filename = "a_ggram.png", width = 8, height = 5)
+```
+
+``` r
+library(ggram)
+ggram:::clearhistory()
+
+library(ggsurvfit)
+df_colon |>
+  survfit2(Surv(time, status) ~ 
+             surg, 
+           data = _) |>
+  ggsurvfit(linewidth = 1) +
+  add_confidence_interval() +
+  add_quantile(y_value = 0.6) +
+  scale_ggsurvfit()
+
+
+ggram("30DayChartChallenge2024, Day #7: Hazards")
 ```
 
 ``` r
