@@ -1,5 +1,5 @@
 #' @export
-ggram <- function(title = NULL, widths = c(1,1), ...){
+ggram <- function(title = NULL, widths = c(1,1), style_output = F, ...){
   
   temp <- tempfile()
   savehistory(file = temp)
@@ -9,15 +9,16 @@ ggram <- function(title = NULL, widths = c(1,1), ...){
   code_plot <- code_file_to_code_df(temp) |>
     code_df_to_code_plot()
   
+  if(style_output){style = stamp_graph_paper()}else{style = NULL}
   
-  patchwork::free(code_plot) + plot + patchwork::plot_layout(widths = widths) +
+  patchwork::free(code_plot) + plot + style + patchwork::plot_layout(widths = widths) +
     patchwork::plot_annotation(title = title, ...) & 
     theme(plot.background = element_rect(colour = "black", linewidth = .05))
   
 }
 
 #' @export
-ggram_df_output <- function(title = NULL, widths = c(1,1), ...){
+ggram_df_output <- function(title = NULL, widths = c(1.1,1), ...){
   
   temp <- tempfile()
   savehistory(file = temp)
@@ -38,7 +39,6 @@ ggram_df_output <- function(title = NULL, widths = c(1,1), ...){
     
 }
 
-#' @export
 ggram_tp_output <- function(title = NULL, widths = c(1,1), ...){
   
   temp <- tempfile()

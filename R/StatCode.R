@@ -11,6 +11,7 @@ compute_panel_code <- function(data, scales){
     mutate(row = row_number()) |> 
     mutate(is_highlighted = str_detect(.data$code, "#<<")) |> 
     mutate(code = str_remove(.data$code, "#<<")) |>
+    mutate(code = str_remove(.data$code, "^#$")) |>
     mutate(code = str_split(.data$code, "")) |>
     unnest(code) |>
     group_by(row) |> 
@@ -21,6 +22,9 @@ compute_panel_code <- function(data, scales){
     mutate(label = .data$code)
   
 }
+
+
+
 
 compute_panel_code_line_numbers <- function(data, scales){
   
@@ -44,3 +48,7 @@ StatCodeLineNumbers <- ggproto("StatCodeLineNumbers", Stat,
                                       hjust = after_stat(1),
                                       label = after_stat(row))
                     )
+
+
+
+

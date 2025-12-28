@@ -43,20 +43,22 @@ Install development version:
 remotes::install_github("EvaMaeRey/ggram")
 ```
 
-The following must be done in an interactive session:
+The following should be done in an interactive session:
 
 ```{r, eval = F}
 library(ggplot2)
 library(ggram)
 
-ggram:::clearhistory() # you can do this in your IDE if you prefer
+###
+# clear history with your IDE
+###
 
 ggplot(cars) + 
   aes(speed, dist) + 
   geom_point() + 
   geom_smooth() #<<
 
-ggram("This is a ggram") # this must be on a single line for arguments here (fragile! sorry!)
+ggram("This is a ggram.") # this must be on a single line at this early development stage.
 ```
 
 
@@ -81,13 +83,13 @@ library(tidyverse)
 
 
 ```{r clearhistory}
-#' @export
 clearhistory <- function() {
   
   temp <- tempfile()
-  write("", file=temp)
+  write("", file = temp)
   loadhistory(temp)
-  unlink(".blank")
+  unlink(temp)
+  
 }
 ```
 
@@ -112,6 +114,7 @@ compute_panel_code <- function(data, scales){
     mutate(row = row_number()) |> 
     mutate(is_highlighted = str_detect(.data$code, "#<<")) |> 
     mutate(code = str_remove(.data$code, "#<<")) |>
+    mutate(code = str_remove(.data$code, "^#$")) |>
     mutate(code = str_split(.data$code, "")) |>
     unnest(code) |>
     group_by(row) |> 
@@ -122,6 +125,9 @@ compute_panel_code <- function(data, scales){
     mutate(label = .data$code)
   
 }
+
+
+
 
 compute_panel_code_line_numbers <- function(data, scales){
   
@@ -145,6 +151,10 @@ StatCodeLineNumbers <- ggproto("StatCodeLineNumbers", Stat,
                                       hjust = after_stat(1),
                                       label = after_stat(row))
                     )
+
+
+
+
 ```
 
 </details>
@@ -223,16 +233,12 @@ stamp_graph_paper <- function(){
   
   list(
     
-    theme_void(),
+    theme_classic(),
     theme(plot.background = element_rect(fill = alpha("whitesmoke", .1))),
-    scale_y_reverse(limits = c(-1, 20)),
-    # coord_equal(),
-    scale_x_continuous(limits = c(-3, 35)),
-    # annotate("rect", xmin = -Inf, xmax = 0, ymin = -Inf, ymax = Inf, 
-             # fill = alpha("grey90", .1)),
-    geom_vline(xintercept = -3:35, color = "blue", alpha = .5, linewidth = .2) ,
-    geom_hline(yintercept = -1:29 + .5, color = "blue", linewidth = .2, alpha = .5),
-    NULL
+    annotate(geom = "segment", x = I(-3:23/20), xend = I(-3:23/20), y = I(-.2), yend = I(1.1), color = "blue", alpha = .15, linewidth = .2) ,
+    annotate(geom = "segment", y = I(-3:23/20), yend = I(-3:23/20), x = I(-.2), xend = I(1.1),  color = "blue", alpha = .15,  linewidth = .2),
+    NULL,  
+    coord_cartesian(clip = "off")
   )
   
 }
@@ -247,9 +253,37 @@ ggplot() +
   stamp_notebook() + 
   stamp_punched_holes()
 
-ggplot() + 
-  stamp_graph_paper()
+ggplot(cars) + 
+  stamp_graph_paper() + 
+  aes(speed,dist) + 
+  geom_point()
 ```
+
+
+```{r, eval = F}
+library(ggram)
+library(tidyverse)
+
+library(ggplot2)
+
+ggram:::clearhistory()
+
+#' Get ready for Oct 3rd
+#'
+theme_grey(
+  accent = "darkorange"
+  ) |>
+  set_theme()
+#'
+ggplot(cars, 
+       aes(speed, dist)) + 
+  geom_point() + 
+  geom_smooth(se = F)
+
+ggram()
+
+```
+
 
 
 
@@ -284,7 +318,7 @@ code_file_to_code_df() |>
 
 ```{r ggram}
 #' @export
-ggram <- function(title = NULL, widths = c(1,1), ...){
+ggram <- function(title = NULL, widths = c(1,1), style_output = F, ...){
   
   temp <- tempfile()
   savehistory(file = temp)
@@ -294,15 +328,16 @@ ggram <- function(title = NULL, widths = c(1,1), ...){
   code_plot <- code_file_to_code_df(temp) |>
     code_df_to_code_plot()
   
+  if(style_output){style = stamp_graph_paper()}else{style = NULL}
   
-  patchwork::free(code_plot) + plot + patchwork::plot_layout(widths = widths) +
+  patchwork::free(code_plot) + plot + style + patchwork::plot_layout(widths = widths) +
     patchwork::plot_annotation(title = title, ...) & 
     theme(plot.background = element_rect(colour = "black", linewidth = .05))
   
 }
 
 #' @export
-ggram_df_output <- function(title = NULL, widths = c(1,1), ...){
+ggram_df_output <- function(title = NULL, widths = c(1.1,1), ...){
   
   temp <- tempfile()
   savehistory(file = temp)
@@ -323,7 +358,6 @@ ggram_df_output <- function(title = NULL, widths = c(1,1), ...){
     
 }
 
-#' @export
 ggram_tp_output <- function(title = NULL, widths = c(1,1), ...){
   
   temp <- tempfile()
@@ -379,11 +413,25 @@ ggram_text_output <- function(title = NULL, widths = c(1,1), ...){
 }
 ```
 
+## `clearhistory()` (experimental, not exported)
+
+```{r}
+clearhistory <- function() {
+  
+  temp <- tempfile()
+  write("", file = temp)
+  loadhistory(temp)
+  unlink(temp)
+  
+}
+```
 
 
 ```{r, eval = F}
-clearhistory()
+ggram:::clearhistory()
 
+library(tidyverse)
+#
 ggplot(cars) + 
   aes(speed, dist) + 
   geom_point() + 
@@ -399,6 +447,7 @@ library(ggram)
 ggram:::clearhistory()
 
 library(ggsurvfit)
+#
 df_colon |>
   survfit2(Surv(time, status) ~ 
              surg, 
@@ -432,19 +481,21 @@ usethis::use_package("stringr")
 usethis::use_package("styler")
 usethis::use_package("dplyr")
 usethis::use_package("tidyr")
+usethis::use_package("magick")
 
 
 # knitrExtra::chunk_names_get()
-knitrExtra::chunk_to_dir(c("clearhistory", "StatCode", "stamp_notebook", "ggram", "code_file_to_code_df", "code_df_to_code_plot"))
+knitrExtra::chunk_to_dir(c("clearhistory", "StatCode", "stamp_notebook", "ggram", "code_file_to_code_df", "code_df_to_code_plot", "gif_from_ggplots"))
 ```
 
 ```{r, eval = F}
+devtools::document()
 devtools::check(".")
 devtools::install(pkg = ".", upgrade = "never") 
 ```
 
 ```{r}
-knitr::knit_exit()
+# knitr::knit_exit()
 
 ```
 
@@ -457,6 +508,8 @@ knitr::knit_exit()
 
 
 ```{r, eval = F}
+
+
 ggram:::clearhistory()
 
 cars |> 
@@ -464,12 +517,49 @@ cars |>
 
 ggram_df_output()
 
+geom_mean <- function(se = TRUE) {
+  list(
+    stat_summary(fun = "mean", geom = "bar", fill = "grey70"),
+    if (se) 
+      stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = 0.4)
+  )
+}
+
+geom_mean1 <- function(se = TRUE) {
+  c(
+    stat_summary(fun = "mean", geom = "bar", fill = "grey70"),
+    if (se) 
+      stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = 0.4)
+  )
+}
+
+identical(geom_mean, geom_mean1)
+
+library(ggplot2)
+p1 <- ggplot(mpg, aes(drv, cty)) + geom_mean()
+p2 <- ggplot(mpg, aes(drv, cty)) + geom_mean1()
+
+p2$layers
+p1$mapping
+
+identical(p1, p2)
+
+
+library(tidyverse)
+library(ggsoiltexture)
+
+tibble(sand = 33.3,
+       silt = 33.3, 
+       clay = 33.4) |>
+  ggsoiltexture() + 
+  geom_point(aes(color = sand)) + 
+  coord_equal() + 
+  scale_color_viridis_c() + 
+  NULL
+
 ```
 
 ```{r, eval = F}
-
-
-
 ggram:::clearhistory()
 
 library(tidypivot)
@@ -516,11 +606,222 @@ diamonds |>
   geom_bar(position = "fill") + 
   labs(title = "Lengths show the within-cut proportions")
 
+library(tidyverse)
+set_theme()
+library(ggram)
+ggram:::clearhistory()
 
 
 
+tribble(~platform, ~ num_steps, 
+         "LinkedIn", 8,
+         "Other Platforms", 2) |>
+  ggplot() +
+  aes(x = platform, y = num_steps) +
+  geom_col() + #<< # contrast big small
+  labs(title = "Number of steps required to\nshare media by platform") + 
+  labs(x = NULL, y = NULL)
+
+
+ggram("#30DayChartChallenge, Day 4 - #BigOrSmall")
+
+gapminder::gapminder |>
+  filter(year == 2002) ->
+gapminder_2002
+ggram:::clearhistory()
+
+library(ggcirclepack) #<< 
+ggplot(data = gapminder_2002) +
+  aes(id = country,
+      area = pop,
+      colour = continent) +
+  geom_circlepack() + #<<
+  geom_circlepack_text() + #<<
+  theme(legend.position = "none") + 
+  coord_equal()
+
+
+ggram("#30DayChartChallenge, #Day3 - #Circular", subtitle = "With ggplot2 extension github.com/EvaMaeRey/ggcirclepack")
+
+ggsave("ForLI.png")
+
+library(ggplot2)
+```
+
+
+```{r hadley}
+ggplot(data = mtcars) + # 'I'd get a dataset...' 
+  aes(x = wt,  # 'I want to put this on the x-axis' 
+      y = mpg) + # 'Let's put this on the y-axis'
+  geom_point() + # 'Put some points here'
+  geom_smooth() + # 'Draw a line'
+  facet_wrap(vars(cyl)) # 'Break it up by this variable'
 ```
 
 
 
+```{r}
+library(tidyverse)
+compute_panel_comment <- function(data, scales){
+  
+ data |>
+    tidyr::separate(code, into = c("code", "comment"), sep = "#") |>
+    mutate(row = row_number()) |> 
+    mutate(nchar_code = nchar(.data$code))
+    
+  
+}
+
+StatComment <- ggproto("StatComment", Stat,
+                       compute_panel = compute_panel_comment,
+                       default_aes = 
+                         aes(y = after_stat(row),
+                             label = after_stat(comment) |>
+                                           str_wrap(15),
+                             x = after_stat(ifelse(row %% 2, 0-2, 20 + 2)),
+                             hjust = after_stat(ifelse(row %% 2,1.2, -.2))
+                             ))
+
+
+compute_panel_code_w_comment <- function(data, scales){
+  
+ data |>
+    tidyr::separate(code, into = c("code", "comment"), sep = "#") |>
+    mutate(row = row_number()) |> 
+    mutate(code = str_split(.data$code, "")) |>
+    unnest(code) |>
+    group_by(row) |> 
+    mutate(x = row_number()) |>
+    mutate(is_character = .data$code != " ") |>
+    mutate(is_code = cumsum(.data$is_character) |> as.logical()) |>
+    filter(.data$is_code) |>
+    mutate(label = .data$code)
+  
+}
+
+# knitrExtra::chunk_code_get("hadley") |> 
+#   data.frame(code = _) |>
+#   compute_panel_code_w_comment()
+
+
+StatCodeRemoveComment <- ggproto("StatCodeRemoveComment", Stat,
+                       compute_panel = compute_panel_code_w_comment,
+                       default_aes = aes(y = after_stat(row)))
+```
+
+```{r, fig.height=8, fig.width=8}
+library(ggplyr)
+knitrExtra::chunk_code_get("hadley") |> 
+  data.frame(code = _) |>
+  ggplot() + 
+  aes(code = code) + 
+  geom_text(stat = StatCodeRemoveComment,
+            family = "mono",
+            size = 8) + 
+  geom_tile(stat = StatCodeRemoveComment,
+            fill = alpha("slateblue", .1)) + 
+  geom_label(stat = StatComment, 
+             label.padding = unit(.2, "in"),
+             label.r = unit(.2, "in"),
+             size = 3.5
+             ) + 
+  geom_label(stat = StatComment,
+             aes(label = after_stat(row))) +
+  geom_text(stat = StatCodeLineNumbers,
+            size = 7, alpha = .3) +
+  scale_y_reverse() + 
+  coord_cartesian(expand = T, 
+                  xlim = c(-10, 30),
+                  ylim = c(0, 20)) + 
+  theme_void(ink = "slateblue",
+             paper = "whitesmoke",
+             base_size = 15) +
+  theme(plot.margin = margin(10,10,10,10)) +
+  geom_vline(xintercept = 0, alpha = .3) +
+  labs(title = "ggplot2: transcriber of envisioned plots\n") +
+  labs(subtitle = "'In my head I could very clearly kind of picture...'") +
+  data_filter(row_number() == 0) + intercept() +
+  data_refilter(row_number() == 1) + intercept() +
+  data_refilter(row_number() %in% 1:2) + intercept() +
+  data_refilter(row_number() %in% 1:3) + intercept() +
+  data_refilter(row_number() %in% 1:4) + intercept() +
+  data_refilter(row_number() %in% 1:5) + intercept() + 
+  data_refilter(row_number() %in% 1:6) + intercept() + 
+  annotate(geom = "label", linewidth = 0, label = 
+  "'And then, like, getting that vision out of my head, 
+  and into reality, [was] just really, really hard. 
+  Just, like, felt harder than it should be. Like, 
+  there's a lot of custom programming involved. 
+           
+  I just wanted to say, like, you know, this is what
+  I'm thinking, this is how I'm picturing this plot. 
+  Like, you're the computer 'Go and do it'....  
+           
+  And I'd also been reading about the Grammar of 
+  Graphics by Leland Wilkinson, I got to meet 
+  him a couple of times and ... I was, like, 
+  this book has been, like, written for me.'" ,
+            x = I(.35), y = I(.32), size = 5) + ggplyr::intercept() + 
+  labs(caption = "Hadley Wickham on The Data Wranglers Podcast") + intercept() 
+
+ggsave(filename = "transcriber_of_imagined_plots.png", width = 8,height = 8)
+```
+
+
+```{r gif_from_ggplots}
+gif_from_ggplots <- function(plots, gif_output_path = "temp.gif"){
+  
+  plot_nums <- 1:length(plots) 
+  plot_files <- paste("temp", plot_nums |> 
+                        stringr::str_pad(pad = "0", width = 2), ".png")
+  
+  for(i in plot_nums){
+    
+    ggplot2::ggsave(plot_files[i], plot = plots[[i]])
+    
+  }
+  
+  image_list <- lapply(plot_files, magick::image_read)
+  frames <- magick::image_join(image_list)
+  gif <- magick::image_animate(frames, fps = 2, optimize = TRUE) # 1 frame per second
+  magick::image_write(gif, path = gif_output_path)
+  cat(paste("GIF saved to:", gif_output_path, "\n"))
+
+}
+```
+
+
+
+```{r}
+library(ggplyr)
+ggplot(cars) + intercept() + 
+  aes(speed) + intercept() + 
+  geom_histogram() + intercept()
+
+gif_from_ggplots(list(p1, p2, p3))
+
+```
+
+  
+  
+```  
+library(patchwork)
+(p1 + p2) /
+  (p3 + p4) /
+  (p5 + plot_spacer())
+  
+ggsave("p1.pdf", p1, height=8, width=8)
+ggsave("p2.pdf", p2, height=8, width=8)
+ggsave("p3.pdf", p3, height=8, width=8)
+ggsave("p4.pdf", p4, height=8, width=8)
+ggsave("p5.pdf", p5, height=8, width=8)
+ggsave("p6.pdf", p6, height=8, width=8)
+ggsave("p7.pdf", p7, height=8, width=8)
+ggsave("p8.pdf", p8, height=8, width=8)
+
+pdf_list <- list.files(pattern = "p\\d", )
+
+pdftools::pdf_combine(pdf_list, output = "slideshow.pdf")
+
+```
 
