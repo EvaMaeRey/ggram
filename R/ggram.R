@@ -1,6 +1,12 @@
+#' @importFrom ggplot2 ggplot geom_tile scale_fill_manual alpha geom_text theme
+#' @importFrom ggplot2 element_rect theme_void scale_y_reverse scale_x_continuous
+#' @importFrom ggplot2 geom_vline geom_hline annotate last_plot
+#' @importFrom utils loadhistory
+
+
 
 # INTERNAL FUNCTIONS ------------------------------------------------------
-
+#' @importFrom utils savehistory
 ## History ----
 save_history <- function(){
   temp <- tempfile()
