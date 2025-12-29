@@ -463,16 +463,7 @@ ggram("30DayChartChallenge2024, Day #7: Hazards")
 ```
 
 
-```{r}
-knitr::include_graphics("a_ggram.png")
-```
-
 # Minimally package
-
-```{r, eval = F}
-devtools::create(".")
-```
-
 
 ```{r}
 usethis::use_package("ggplot2")
@@ -495,7 +486,7 @@ devtools::install(pkg = ".", upgrade = "never")
 ```
 
 ```{r}
-# knitr::knit_exit()
+knitr::knit_exit()
 
 ```
 
@@ -643,7 +634,6 @@ ggplot(data = gapminder_2002) +
 
 ggram("#30DayChartChallenge, #Day3 - #Circular", subtitle = "With ggplot2 extension github.com/EvaMaeRey/ggcirclepack")
 
-ggsave("ForLI.png")
 
 library(ggplot2)
 ```
@@ -764,7 +754,6 @@ knitrExtra::chunk_code_get("hadley") |>
             x = I(.35), y = I(.32), size = 5) + ggplyr::intercept() + 
   labs(caption = "Hadley Wickham on The Data Wranglers Podcast") + intercept() 
 
-ggsave(filename = "transcriber_of_imagined_plots.png", width = 8,height = 8)
 ```
 
 
@@ -798,7 +787,7 @@ ggplot(cars) + intercept() +
   aes(speed) + intercept() + 
   geom_histogram() + intercept()
 
-gif_from_ggplots(list(p1, p2, p3))
+# gif_from_ggplots(list(p1, p2, p3))
 
 ```
 
