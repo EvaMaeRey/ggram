@@ -1,4 +1,4 @@
-clearhistory <- function() {
+clearhistory <- function(){
   
   temp <- tempfile()
   write("", file = temp)

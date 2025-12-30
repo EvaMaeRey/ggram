@@ -1,5 +1,5 @@
 
-stamp_notebook <- function(){
+stamp_notebook <- function(vline_color = "darkred", hline_color = "blue"){
   
   list(
     
@@ -10,8 +10,8 @@ stamp_notebook <- function(){
     scale_x_continuous(limits = c(-3, 35)),
     annotate("rect", xmin = -Inf, xmax = 0, ymin = -Inf, ymax = Inf, 
              fill = alpha("grey90", .1)),
-    geom_vline(xintercept = 0, color = "darkred") ,
-    geom_hline(yintercept = 1:29 + .5, color = "blue", linewidth = .2, alpha = .5),
+    geom_vline(xintercept = 0, color = vline_color) ,
+    geom_hline(yintercept = 1:29 + .5, color = hline_color, linewidth = .2, alpha = .5),
     NULL
   )
   
