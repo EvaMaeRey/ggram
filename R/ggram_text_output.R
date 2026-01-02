@@ -1,4 +1,3 @@
-#' @export
 ggram_text_output <- function(title = NULL, widths = c(1.1,1), code = NULL, ...){
   
   code <- get_code(code = code)

@@ -222,21 +222,57 @@ Only one style currently is supported for the code visual.
 
 ``` r
 
-stamp_notebook <- function(vline_color = "darkred", hline_color = "blue"){
+stamp_notebook <- function(vline_color = "darkred", hline_color = "blue", paper_color = alpha("whitesmoke", .1),
+                           width = 35,
+                           height = 20){
   
   list(
     
     theme_void(),
-    theme(plot.background = element_rect(fill = alpha("whitesmoke", .1))),
-    scale_y_reverse(limits = c(-1, 20)),
+    theme(plot.background = element_rect(fill = paper_color)),
+    scale_y_reverse(limits = c(-1, height)),
     # coord_equal(),
-    scale_x_continuous(limits = c(-3, 35)),
+    scale_x_continuous(limits = c(-3, width)),
     annotate("rect", xmin = -Inf, xmax = 0, ymin = -Inf, ymax = Inf, 
              fill = alpha("grey90", .1)),
     geom_vline(xintercept = 0, color = vline_color) ,
     geom_hline(yintercept = 1:29 + .5, color = hline_color, linewidth = .2, alpha = .5),
     NULL
   )
+  
+}
+
+
+stamp_notebook_college_rule <- function(){
+  
+stamp_notebook(width = 40,
+               height = 25)
+  
+}
+
+
+stamp_typed_page <- function(){
+  
+stamp_notebook(vline_color = "darkolivegreen", 
+               hline_color = alpha("lightgrey", .1), 
+               paper_color = alpha("whitesmoke", .1),
+               width = 50,
+               height = 30)
+  
+}
+
+
+stamp_legal_pad <- function(){
+  
+  list(
+stamp_notebook(vline_color = "darkred", 
+               hline_color = "blue", 
+               paper_color = alpha("yellow", .2),
+               width = 40,
+               height = 25
+               ),
+ geom_vline(xintercept = -.2, color = "darkred"))
+  
   
 }
 
@@ -296,10 +332,11 @@ ggram:::clearhistory()
 ## `code_df_to_code_plot()` prepares df
 
 ``` r
-
 code_df_to_code_plot <- function(code_df, style = "notebook"){
   
   notebook <- list(stamp_notebook(), stamp_punched_holes())
+  # notebook <- stamp_typed_page()
+  # notebook <- stamp_legal_pad()
   
   code_df |>
   ggplot() +
@@ -479,31 +516,6 @@ knitr::include_graphics("man/figures/a_ggram_df.png")
 <img src="man/figures/README-unnamed-chunk-14-2.png" width="100%" />
 
 ``` r
-#' @export
-ggram_text_output <- function(title = NULL, widths = c(1.1,1), code = NULL, ...){
-  
-  code <- get_code(code = code)
-  code_plot <- specify_code_plot(code)
-  output <- eval(parse(text = code))
-  output_text <- capture.output(output)
-  output_plot <- specify_textoutput_plot(output_text)
-  
-  patch_code_and_output(code_plot, output_plot, widths, title, ...)
-    
-}
-```
-
-``` r
-clearhistory()
-
-"hello world!"
-
-ggram_text_output()
-
-ggsave(filename = "man/figures/a_ggram_text.png", width = 8, height = 5)
-```
-
-``` r
 knitr::include_graphics("man/figures/a_ggram_text.png")
 ```
 
@@ -529,10 +541,10 @@ knitrExtra::chunk_names_get()
 #> [13] "unnamed-chunk-9"      "code_df_to_code_plot" "unnamed-chunk-10"    
 #> [16] "clearhistory"         "helpers"              "ggram"               
 #> [19] "unnamed-chunk-11"     "unnamed-chunk-12"     "ggram_df_output"     
-#> [22] "unnamed-chunk-13"     "unnamed-chunk-14"     "ggram_text_output"   
-#> [25] "unnamed-chunk-15"     "unnamed-chunk-16"     "unnamed-chunk-17"    
-#> [28] "unnamed-chunk-18"     "unnamed-chunk-19"     "unnamed-chunk-20"    
-#> [31] "ggram_tp_output"      "unnamed-chunk-21"     "unnamed-chunk-22"    
+#> [22] "unnamed-chunk-13"     "unnamed-chunk-14"     "unnamed-chunk-15"    
+#> [25] "unnamed-chunk-16"     "unnamed-chunk-17"     "unnamed-chunk-18"    
+#> [28] "unnamed-chunk-19"     "ggram_tp_output"      "unnamed-chunk-20"    
+#> [31] "ggram_text_output"    "unnamed-chunk-21"     "unnamed-chunk-22"    
 #> [34] "unnamed-chunk-23"     "hadley"               "unnamed-chunk-24"    
 #> [37] "unnamed-chunk-25"     "gif_from_ggplots"     "unnamed-chunk-26"
 knitrExtra::chunk_to_dir(
