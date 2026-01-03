@@ -1,3 +1,4 @@
+#' @export
 clearhistory <- function(){
   
   temp <- tempfile()
