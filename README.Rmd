@@ -210,10 +210,24 @@ code_file_to_code_df() |>
 Only one style currently is supported for the code visual.
 
 ```{r stamp_notebook}
+stamp_punched_holes <- function(){
+  
+   list(
+    annotate("point", x = -1.5, y = I(c(1,9,17)/20) , color = "white", size = 5) ,
+    annotate("point", x = -1.5, y = I(c(1,9,17)/20), shape = 21, 
+             alpha = .3, size = 5, fill = "grey92")
+   )
+  
+}
+
 
 stamp_notebook <- function(vline_color = "darkred", hline_color = "blue", paper_color = alpha("whitesmoke", .1),
                            width = 35,
-                           height = 20){
+                           height = 20, punch_holes = T){
+  
+  punch_base <- annotate("point", x = -1.5, y = I(c(1,9,17)/20) , color = "white", size = 5)
+  punch_edge <- annotate("point", x = -1.5, y = I(c(1,9,17)/20), shape = 21, 
+             alpha = .3, size = 5, fill = "grey92")
   
   list(
     
@@ -226,12 +240,20 @@ stamp_notebook <- function(vline_color = "darkred", hline_color = "blue", paper_
              fill = alpha("grey90", .1)),
     geom_vline(xintercept = 0, color = vline_color) ,
     geom_hline(yintercept = 1:29 + .5, color = hline_color, linewidth = .2, alpha = .5),
-    NULL
+    if(punch_holes){punch_base}else{NULL},
+    if(punch_holes){punch_edge}else{NULL}
+    
   )
   
 }
+```
 
+```{r}
+ggplot() + 
+  stamp_notebook()
+```
 
+```{r}
 stamp_notebook_college_rule <- function(){
   
 stamp_notebook(width = 40,
@@ -251,31 +273,55 @@ stamp_notebook(vline_color = "darkolivegreen",
 }
 
 
-stamp_legal_pad <- function(){
+stamp_cornsilk_page <- function(){
+  
+stamp_notebook(vline_color = alpha("cornsilk2",0), 
+               hline_color = alpha("cornsilk2",0), 
+               paper_color = alpha("cornsilk2",1),
+               width = 50,
+               height = 30)
+  
+}
+
+
+stamp_legal_pad <- function(...){
   
   list(
 stamp_notebook(vline_color = "darkred", 
                hline_color = "blue", 
                paper_color = alpha("yellow", .2),
                width = 40,
-               height = 25
+               height = 25, ...
                ),
  geom_vline(xintercept = -.2, color = "darkred"))
   
   
 }
 
-stamp_punched_holes <- function(){
-  
-   list(
-    annotate("point", x = -1.5, y = c(1,9,17) + .25, color = "white", size = 5) ,
-    annotate("point", x = -1.5, y = c(1,9,17) + .25, shape = 21, 
-             alpha = .3, size = 5, fill = "grey92")
-   )
-  
-}
+```
 
 
+```{r}
+p1 <- ggplot() + 
+  stamp_cornsilk_page()
+
+p2 <- ggplot() + 
+  stamp_legal_pad() 
+
+p3 <- ggplot() + 
+  stamp_notebook_college_rule()
+
+p4 <- ggplot() + 
+  stamp_typed_page()
+
+library(patchwork)
+(p1 + p2)/(p3 + p4)
+```
+
+
+# Styling aspiration for graph-side (right-hand-side) 
+
+```{r}
 stamp_graph_paper <- function(){
   
   list(
@@ -289,16 +335,6 @@ stamp_graph_paper <- function(){
   )
   
 }
-
-
-
-
-```
-
-```{r}
-ggplot() + 
-  stamp_notebook() + 
-  stamp_punched_holes()
 
 ggplot(cars) + 
   stamp_graph_paper() + 
@@ -323,11 +359,7 @@ ggram:::clearhistory()
 ## `code_df_to_code_plot()` prepares df 
 
 ```{r code_df_to_code_plot}
-code_df_to_code_plot <- function(code_df, style = "notebook"){
-  
-  notebook <- list(stamp_notebook(), stamp_punched_holes())
-  # notebook <- stamp_typed_page()
-  # notebook <- stamp_legal_pad()
+code_df_to_code_plot <- function(code_df, style = stamp_notebook()){
   
   code_df |>
   ggplot() +
@@ -338,7 +370,7 @@ code_df_to_code_plot <- function(code_df, style = "notebook"){
     geom_text(stat = StatCode, alpha = .7, family = "mono") +
     geom_text(stat = StatCodeLineNumbers, family = "mono") +
     theme(legend.position = "none") + 
-    notebook
+    style
   
 }
 ```
@@ -395,11 +427,11 @@ get_code <- function(code = NULL){
   
 }
 
-specify_code_plot <- function(code){
+specify_code_plot <- function(code, style = stamp_notebook()){
   
   code |> 
     code_file_to_code_df() |>
-    code_df_to_code_plot()
+    code_df_to_code_plot(style = style)
   
 }
 
@@ -436,10 +468,10 @@ specify_textoutput_plot <- function(output){
 
 ```{r ggram}
 #' @export
-ggram <- function(title = NULL, widths = c(1,1), code = NULL, ...){
+ggram <- function(title = NULL, widths = c(1,1), code = NULL, style = stamp_notebook(), ...){
   
   code <- get_code()
-  code_plot <- specify_code_plot(code)
+  code_plot <- specify_code_plot(code, style = style)
   output <- eval(parse(text = code))
   output_plot <- output
   
@@ -459,16 +491,25 @@ ggplot(cars) +
   geom_smooth() #<<
 
 ggram("Here is my ggram")
+```
 
-ggsave(filename = "man/figures/a_ggram.png", width = 8, height = 5)
+
+```{r}
+ggram_save <- function(..., width = 8, height = 5){
+  
+  ggsave(..., width = width, height = height)
+  
+}
+```
 
 
+
+```{r, eval = F}
+ggram_save("man/figures/a_ggram.png") 
 ```
 
 ```{r}
 knitr::include_graphics("man/figures/a_ggram.png")
-
-
 ```
 
 
@@ -477,10 +518,10 @@ knitr::include_graphics("man/figures/a_ggram.png")
 
 ```{r ggram_df_output}
 #' @export
-ggram_df_output <- function(title = NULL, widths = c(1.1,1), code = NULL, ...){
+ggram_df_output <- function(title = NULL, widths = c(1.1,1), code = NULL, style = stamp_notebook(), ...){
   
   code <- get_code(code = code)
-  code_plot <- specify_code_plot(code)
+  code_plot <- specify_code_plot(code, style = style)
   output <- eval(parse(text = code))
   output_plot <- gt::gt(output)
   

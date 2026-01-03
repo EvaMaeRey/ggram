@@ -1,8 +1,4 @@
-code_df_to_code_plot <- function(code_df, style = "notebook"){
-  
-  notebook <- list(stamp_notebook(), stamp_punched_holes())
-  # notebook <- stamp_typed_page()
-  # notebook <- stamp_legal_pad()
+code_df_to_code_plot <- function(code_df, style = stamp_notebook()){
   
   code_df |>
   ggplot() +
@@ -13,6 +9,6 @@ code_df_to_code_plot <- function(code_df, style = "notebook"){
     geom_text(stat = StatCode, alpha = .7, family = "mono") +
     geom_text(stat = StatCodeLineNumbers, family = "mono") +
     theme(legend.position = "none") + 
-    notebook
+    style
   
 }

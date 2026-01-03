@@ -1,8 +1,8 @@
 #' @export
-ggram <- function(title = NULL, widths = c(1,1), code = NULL, ...){
+ggram <- function(title = NULL, widths = c(1,1), code = NULL, style = stamp_notebook(), ...){
   
   code <- get_code()
-  code_plot <- specify_code_plot(code)
+  code_plot <- specify_code_plot(code, style = style)
   output <- eval(parse(text = code))
   output_plot <- output
   

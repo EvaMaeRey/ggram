@@ -8,6 +8,8 @@
   - [`stamp_notebook` contains instructions for stamping down a notebook
     paper
     look](#stamp_notebook-contains-instructions-for-stamping-down-a-notebook-paper-look)
+- [Styling aspiration for graph-side
+  (right-hand-side)](#styling-aspiration-for-graph-side-right-hand-side)
   - [`code_df_to_code_plot()` prepares
     df](#code_df_to_code_plot-prepares-df)
   - [`ggram:::clearhistory()` lets you clear your history using code,
@@ -221,10 +223,24 @@ code_file_to_code_df() |>
 Only one style currently is supported for the code visual.
 
 ``` r
+stamp_punched_holes <- function(){
+  
+   list(
+    annotate("point", x = -1.5, y = I(c(1,9,17)/20) , color = "white", size = 5) ,
+    annotate("point", x = -1.5, y = I(c(1,9,17)/20), shape = 21, 
+             alpha = .3, size = 5, fill = "grey92")
+   )
+  
+}
+
 
 stamp_notebook <- function(vline_color = "darkred", hline_color = "blue", paper_color = alpha("whitesmoke", .1),
                            width = 35,
-                           height = 20){
+                           height = 20, punch_holes = T){
+  
+  punch_base <- annotate("point", x = -1.5, y = I(c(1,9,17)/20) , color = "white", size = 5)
+  punch_edge <- annotate("point", x = -1.5, y = I(c(1,9,17)/20), shape = 21, 
+             alpha = .3, size = 5, fill = "grey92")
   
   list(
     
@@ -237,12 +253,22 @@ stamp_notebook <- function(vline_color = "darkred", hline_color = "blue", paper_
              fill = alpha("grey90", .1)),
     geom_vline(xintercept = 0, color = vline_color) ,
     geom_hline(yintercept = 1:29 + .5, color = hline_color, linewidth = .2, alpha = .5),
-    NULL
+    if(punch_holes){punch_base}else{NULL},
+    if(punch_holes){punch_edge}else{NULL}
+    
   )
   
 }
+```
 
+``` r
+ggplot() + 
+  stamp_notebook()
+```
 
+<img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />
+
+``` r
 stamp_notebook_college_rule <- function(){
   
 stamp_notebook(width = 40,
@@ -262,31 +288,54 @@ stamp_notebook(vline_color = "darkolivegreen",
 }
 
 
-stamp_legal_pad <- function(){
+stamp_cornsilk_page <- function(){
+  
+stamp_notebook(vline_color = alpha("cornsilk2",0), 
+               hline_color = alpha("cornsilk2",0), 
+               paper_color = alpha("cornsilk2",1),
+               width = 50,
+               height = 30)
+  
+}
+
+
+stamp_legal_pad <- function(...){
   
   list(
 stamp_notebook(vline_color = "darkred", 
                hline_color = "blue", 
                paper_color = alpha("yellow", .2),
                width = 40,
-               height = 25
+               height = 25, ...
                ),
  geom_vline(xintercept = -.2, color = "darkred"))
   
   
 }
+```
 
-stamp_punched_holes <- function(){
-  
-   list(
-    annotate("point", x = -1.5, y = c(1,9,17) + .25, color = "white", size = 5) ,
-    annotate("point", x = -1.5, y = c(1,9,17) + .25, shape = 21, 
-             alpha = .3, size = 5, fill = "grey92")
-   )
-  
-}
+``` r
+p1 <- ggplot() + 
+  stamp_cornsilk_page()
 
+p2 <- ggplot() + 
+  stamp_legal_pad() 
 
+p3 <- ggplot() + 
+  stamp_notebook_college_rule()
+
+p4 <- ggplot() + 
+  stamp_typed_page()
+
+library(patchwork)
+(p1 + p2)/(p3 + p4)
+```
+
+<img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
+
+# Styling aspiration for graph-side (right-hand-side)
+
+``` r
 stamp_graph_paper <- function(){
   
   list(
@@ -300,17 +349,6 @@ stamp_graph_paper <- function(){
   )
   
 }
-```
-
-``` r
-ggplot() + 
-  stamp_notebook() + 
-  stamp_punched_holes()
-```
-
-<img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />
-
-``` r
 
 ggplot(cars) + 
   stamp_graph_paper() + 
@@ -318,7 +356,7 @@ ggplot(cars) +
   geom_point()
 ```
 
-<img src="man/figures/README-unnamed-chunk-8-2.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
 
 ``` r
 library(ggram)
@@ -332,11 +370,7 @@ ggram:::clearhistory()
 ## `code_df_to_code_plot()` prepares df
 
 ``` r
-code_df_to_code_plot <- function(code_df, style = "notebook"){
-  
-  notebook <- list(stamp_notebook(), stamp_punched_holes())
-  # notebook <- stamp_typed_page()
-  # notebook <- stamp_legal_pad()
+code_df_to_code_plot <- function(code_df, style = stamp_notebook()){
   
   code_df |>
   ggplot() +
@@ -347,7 +381,7 @@ code_df_to_code_plot <- function(code_df, style = "notebook"){
     geom_text(stat = StatCode, alpha = .7, family = "mono") +
     geom_text(stat = StatCodeLineNumbers, family = "mono") +
     theme(legend.position = "none") + 
-    notebook
+    style
   
 }
 ```
@@ -358,7 +392,7 @@ create_plot_code() |>
   code_df_to_code_plot()
 ```
 
-<img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" />
 
 ## `ggram:::clearhistory()` lets you clear your history using code, but you can also do this in your IDE
 
@@ -401,11 +435,11 @@ get_code <- function(code = NULL){
   
 }
 
-specify_code_plot <- function(code){
+specify_code_plot <- function(code, style = stamp_notebook()){
   
   code |> 
     code_file_to_code_df() |>
-    code_df_to_code_plot()
+    code_df_to_code_plot(style = style)
   
 }
 
@@ -442,10 +476,10 @@ specify_textoutput_plot <- function(output){
 
 ``` r
 #' @export
-ggram <- function(title = NULL, widths = c(1,1), code = NULL, ...){
+ggram <- function(title = NULL, widths = c(1,1), code = NULL, style = stamp_notebook(), ...){
   
   code <- get_code()
-  code_plot <- specify_code_plot(code)
+  code_plot <- specify_code_plot(code, style = style)
   output <- eval(parse(text = code))
   output_plot <- output
   
@@ -465,8 +499,18 @@ ggplot(cars) +
   geom_smooth() #<<
 
 ggram("Here is my ggram")
+```
 
-ggsave(filename = "man/figures/a_ggram.png", width = 8, height = 5)
+``` r
+ggram_save <- function(..., width = 8, height = 5){
+  
+  ggsave(..., width = width, height = height)
+  
+}
+```
+
+``` r
+ggram_save("man/figures/a_ggram.png") 
 ```
 
 ``` r
@@ -477,10 +521,10 @@ knitr::include_graphics("man/figures/a_ggram.png")
 
 ``` r
 #' @export
-ggram_df_output <- function(title = NULL, widths = c(1.1,1), code = NULL, ...){
+ggram_df_output <- function(title = NULL, widths = c(1.1,1), code = NULL, style = stamp_notebook(), ...){
   
   code <- get_code(code = code)
-  code_plot <- specify_code_plot(code)
+  code_plot <- specify_code_plot(code, style = style)
   output <- eval(parse(text = code))
   output_plot <- gt::gt(output)
   
@@ -513,7 +557,7 @@ knitr::include_graphics("man/figures/a_ggram_df.png")
   ggram_df_output(code = _)
 ```
 
-<img src="man/figures/README-unnamed-chunk-14-2.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-19-2.png" width="100%" />
 
 ``` r
 knitr::include_graphics("man/figures/a_ggram_text.png")
@@ -538,15 +582,17 @@ knitrExtra::chunk_names_get()
 #>  [4] "unnamed-chunk-4"      "read"                 "unnamed-chunk-5"     
 #>  [7] "StatCode"             "unnamed-chunk-6"      "code_file_to_code_df"
 #> [10] "unnamed-chunk-7"      "stamp_notebook"       "unnamed-chunk-8"     
-#> [13] "unnamed-chunk-9"      "code_df_to_code_plot" "unnamed-chunk-10"    
-#> [16] "clearhistory"         "helpers"              "ggram"               
-#> [19] "unnamed-chunk-11"     "unnamed-chunk-12"     "ggram_df_output"     
-#> [22] "unnamed-chunk-13"     "unnamed-chunk-14"     "unnamed-chunk-15"    
-#> [25] "unnamed-chunk-16"     "unnamed-chunk-17"     "unnamed-chunk-18"    
-#> [28] "unnamed-chunk-19"     "ggram_tp_output"      "unnamed-chunk-20"    
-#> [31] "ggram_text_output"    "unnamed-chunk-21"     "unnamed-chunk-22"    
-#> [34] "unnamed-chunk-23"     "hadley"               "unnamed-chunk-24"    
-#> [37] "unnamed-chunk-25"     "gif_from_ggplots"     "unnamed-chunk-26"
+#> [13] "unnamed-chunk-9"      "unnamed-chunk-10"     "unnamed-chunk-11"    
+#> [16] "unnamed-chunk-12"     "code_df_to_code_plot" "unnamed-chunk-13"    
+#> [19] "clearhistory"         "helpers"              "ggram"               
+#> [22] "unnamed-chunk-14"     "unnamed-chunk-15"     "unnamed-chunk-16"    
+#> [25] "unnamed-chunk-17"     "ggram_df_output"      "unnamed-chunk-18"    
+#> [28] "unnamed-chunk-19"     "unnamed-chunk-20"     "unnamed-chunk-21"    
+#> [31] "unnamed-chunk-22"     "unnamed-chunk-23"     "unnamed-chunk-24"    
+#> [34] "ggram_tp_output"      "unnamed-chunk-25"     "ggram_text_output"   
+#> [37] "unnamed-chunk-26"     "unnamed-chunk-27"     "unnamed-chunk-28"    
+#> [40] "hadley"               "unnamed-chunk-29"     "unnamed-chunk-30"    
+#> [43] "gif_from_ggplots"     "unnamed-chunk-31"
 knitrExtra::chunk_to_dir(
   c("clearhistory", 
     "StatCode", 

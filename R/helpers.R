@@ -19,11 +19,11 @@ get_code <- function(code = NULL){
   
 }
 
-specify_code_plot <- function(code){
+specify_code_plot <- function(code, style = stamp_notebook()){
   
   code |> 
     code_file_to_code_df() |>
-    code_df_to_code_plot()
+    code_df_to_code_plot(style = style)
   
 }
 
