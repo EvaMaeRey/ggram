@@ -1,7 +1,9 @@
-code_file_to_code_df <- function(filepath = ".Rhistory"){
+code_file_to_code_df <- function(code = NULL, filepath = ".Rhistory"){
   
-  readLines(filepath) |> 
-    paste(collapse = "\n") |> 
+  if(is.null(code)){code <- readLines(filepath) |> 
+    paste(collapse = "\n") }
+  
+  code |> 
     styler::style_text() |> 
     as.character() |>
     data.frame(code = _) |>

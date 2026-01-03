@@ -1,11 +1,11 @@
 #' @export
-ggram <- function(title = NULL, widths = c(1,1), code = NULL, ...){
+ggram_df_output <- function(title = NULL, widths = c(1.1,1), code = NULL, ...){
   
-  code <- get_code()
+  code <- get_code(code = code)
   code_plot <- specify_code_plot(code)
   output <- eval(parse(text = code))
-  output_plot <- output
+  output_plot <- gt::gt(output)
   
   patch_code_and_output(code_plot, output_plot, widths, title, ...)
-  
+    
 }

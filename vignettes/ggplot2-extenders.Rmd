@@ -1,0 +1,252 @@
+---
+title: "ggplot2-extenders"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{ggplot2-extenders}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = F
+)
+```
+
+```{r setup}
+library(ggram)
+```
+
+
+```{r}
+clearhistory()
+
+library(ggplot2)
+library(geomtextpath)
+
+ggplot(cars) + 
+  aes(x = speed, y = dist) + 
+  geom_point(alpha = .2) +
+  geom_textpath(#<<
+    label = "loess smoothing", 
+    stat = "smooth", 
+    size = 7,
+    color = "blue",
+    )
+
+ggram("geom_textpath is so easy to use!")
+
+
+library(tidyverse)
+gapminder::gapminder |>
+  filter(
+    country == "France" |
+    country == "Germany"
+    ) ->
+gapminder_fr_de
+
+library(ggplot2)
+library(geomtextpath)
+
+clearhistory()
+
+library(ggplot2)
+library(geomtextpath)
+
+gapminder_fr_de |>
+  ggplot() + 
+  aes(x = year, 
+      y = pop/1000000,
+      label = country) +
+  labs(y = "Population (millions)") +
+  geom_textpath() #<<
+
+
+ggram("geom_textpath is so easy to use!")
+
+
+library(ggplot2)
+library(geomtextpath)
+
+clearhistory()
+
+ggplot(data = pressure) + 
+  aes(x = temperature, 
+      y = pressure,
+      label = 
+        "tempature vs. pressure") +
+  geom_textpath() #<<
+
+
+ggram("#30DayChartChallenge, Day #2: Slopes", subtitle = "with ggplot2 extender github.com/AllanCameron's and Teun van den Brand's {geomtextpath}", widths = c(1,1))
+
+
+# library(tidyplots)
+# 
+# study |> 
+#   tidyplot(x = group, y = score, color = dose) |> 
+#   add_mean_bar(alpha = 0.4) |> 
+#   add_mean_dash() |> 
+#   add_mean_value()
+# 
+# ggram("checking out tidyplots")
+
+
+```
+
+
+```{r}
+library(ggram)
+clearhistory()
+
+gapminder::gapminder |>
+  filter(country %in% 
+           c("United Kingdom",
+             "Germany", 
+             "France",
+             "Spain",
+             "Netherlands")) |>
+  mutate(rank_life_exp_by_year = rank(-lifeExp), 
+         .by = year) |>
+  filter(year > 1960) ->
+gapminder_euro_select_ranked
+  
+library(scales)
+
+clearhistory()
+
+gapminder_euro_select_ranked |>
+  ggplot() + 
+  aes(x = year, 
+      y = rank_life_exp_by_year,
+      color = country) + 
+  geom_point() + 
+  scale_y_reverse(
+    label = scales::label_ordinal()) +
+  labs(y = NULL) +
+  ggbump::geom_bump()  #<<
+
+
+ggram("#30DayChartChallenge, Day #5: Ranking", subtitle = "with ggplot2 extender github.com/davidsjoberg's {ggbump}", widths = c(1.5,1))
+
+geom_smooth(se)
+
+```
+
+
+```{r}
+options(scipen = 10)
+
+clearhistory()
+
+library(ggstats)
+chilemapas::censo_2017_comunas |>
+  ggplot() + 
+  aes(y = edad,
+      fill = sexo,
+      weight = poblacion) + 
+  geom_diverging() + #<<
+  geom_diverging_text( #<<
+    hide_below = 490000, #<<
+    color = "grey95" #<<
+    ) + #<<
+  theme(
+    legend.position = c(.2,.85))
+
+ggram("#30DayChartChallenge, Day #9: Diverging", subtitle = "with ggplot2 extender github.com/larmarange's {ggstats}", widths = c(1,1), caption = "further styling could remove minus sign in x axis: `+ scale_x_continuous( labels = function(x){abs(x)})`; and change x and fill axis label: `+ labs(x = 'Population', fill = NULL)`" |> str_wrap(100))
+```
+
+```{r}
+library(tidyverse)
+
+palmerpenguins::penguins |>
+  filter(!is.na(sex)) ->
+  penguins_mf
+
+library(ggram)
+ggram:::clearhistory()
+
+library(ggridges)
+ggplot(penguins_mf) + 
+  aes(
+    x = body_mass_g, 
+    y = interaction(sex, species), 
+    fill = sex,
+    ) +
+  geom_point(shape = "|") +
+  geom_density_ridges(alpha = .7) + #<<
+  guides(fill = "none")
+
+ggram("#30DayChartChallenge, Day #7: Outliers", subtitle = "with ggplot2 extender github.com/wilkelab's (Claus Wilke) {ggridges}", widths = c(1.2,1), caption = "Further styling: `+ labs(y = NULL, fill = NULL, x = 'Body Mass (grams)')`; set space or return as sep in `interaction()`: `sep = ' ' or `sep = '\\n'` " |> str_wrap(80))
+```
+
+
+
+
+
+```{r}
+ggram:::clearhistory()
+
+library(ggtextcircle)
+#
+ggplot(gapminder_2002) + 
+  aes(label = country, 
+      color = continent
+      ) + 
+  geom_textcircle(#<<
+               size = 2,   hjust = 0 #<<
+    ) + #<<
+  coord_equal() + 
+  theme(legend.position = "none")
+
+ggram("#30DayChartChallenge, Day #3: Circular", subtitle = "with ggplot2 extender github.com/nrennie's (Nicola Rennie) {ggtextcircle}", widths = c(1.2,1))
+
+```
+
+
+```{r}
+gapminder::gapminder |> 
+  filter(year == 2002) ->
+gapminder_2002
+
+ggram:::clearhistory()
+
+ggplot(gapminder_2002) + 
+  aes(id = country,
+      area = pop,
+      color = continent) + 
+  geom_circlepack() + #<<
+  geom_circlepack_text() + #<<
+  coord_equal() + 
+  theme(legend.position = "none") +
+  facet_wrap(~continent)
+  
+
+ggram("#30DayChartChallenge, Day #3: Circular", subtitle = "with ggplot2 extender github.com/evamaerey's (Gina Reynold's) {ggcirclepack}", widths = c(1.2,1))
+
+
+```
+
+
+```{r}
+
+
+
+ggplot(cars) + 
+  aes(speed, dist)  + 
+  geom_point(stat = "identity", 
+             )
+
+
+ggplot(cars) + 
+  aes(speed)  + 
+  stat_identity()
+
+
+
+```
+
+
+
