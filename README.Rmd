@@ -137,7 +137,7 @@ StatCode <- ggproto("StatCode", Stat,
 StatCodeLineNumbers <- ggproto("StatCodeLineNumbers", Stat,
                     compute_panel = compute_panel_code_line_numbers,
                     default_aes = aes(y = after_stat(row),
-                                      x = after_stat(-0.5),
+                                      x = after_stat(-2.3),
                                       hjust = after_stat(1),
                                       label = after_stat(row))
                     )
@@ -336,10 +336,10 @@ stamp_graph_paper <- function(){
   
 }
 
-ggplot(cars) + 
-  stamp_graph_paper() + 
-  aes(speed,dist) + 
-  geom_point()
+# ggplot(cars) + 
+#   stamp_graph_paper() + 
+#   aes(speed,dist) + 
+#   geom_point()
 ```
 
 
