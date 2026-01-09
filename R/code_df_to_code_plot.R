@@ -8,12 +8,12 @@ code_df_to_code_plot <- function(code_df,
                                  paper_color = alpha("whitesmoke", .1),
                                  width = 35,
                                  height = 20, 
-                                 punch_holes = TRUE
+                                 accent = stamp_punched_holes()
                        
                                  
                                  ){
   
-  style <- style %||% stamp_notebook(vline_color, hline_color, paper_color, width, height, punch_holes)
+  style <- style %||% stamp_notebook(vline_color, hline_color, paper_color, width, height, accent)
   
   code_df |>
   ggplot() +
