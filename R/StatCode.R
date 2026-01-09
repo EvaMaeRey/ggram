@@ -23,9 +23,6 @@ compute_panel_code <- function(data, scales){
   
 }
 
-
-
-
 compute_panel_code_line_numbers <- function(data, scales){
   
  data |>
@@ -48,7 +45,3 @@ StatCodeLineNumbers <- ggproto("StatCodeLineNumbers", Stat,
                                       hjust = after_stat(1),
                                       label = after_stat(row))
                     )
-
-
-
-

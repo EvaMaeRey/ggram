@@ -9,9 +9,12 @@ stamp_punched_holes <- function(){
 }
 
 
-stamp_notebook <- function(vline_color = "darkred", hline_color = "blue", paper_color = alpha("whitesmoke", .1),
+stamp_notebook <- function(vline_color = "darkred", 
+                           hline_color = "blue", 
+                           paper_color = alpha("whitesmoke", .1),
                            width = 35,
-                           height = 20, punch_holes = T){
+                           height = 20, 
+                           punch_holes = T){
   
   punch_base <- annotate("point", x = -1.5, y = I(c(1,9,17)/20) , color = "white", size = 5)
   punch_edge <- annotate("point", x = -1.5, y = I(c(1,9,17)/20), shape = 21, 
