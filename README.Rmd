@@ -24,16 +24,18 @@ library(tidyverse)
 # ggram
 
 <!-- badges: start -->
+
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+
 <!-- badges: end -->
 
-`ggram` explores a method for creating a *quick* code-output side-by-side for sharing bite-sized how-tos.  The specific motivation is to easily feature ggplot2 extenders work - which so often *transform* user experience.
+`ggram` explores a method for creating a *quick* code-output side-by-side for sharing bite-sized how-tos. The specific motivation is to easily feature ggplot2 extenders work - which so often *transform* user experience.
 
-We're in the proof-of-concept phase (expect fragility), but the idea is: 
+We're in the proof-of-concept phase (expect fragility), but the idea is:
 
-1) clear history. 
-2) execute plot code.
-3) combine plot code (new history) and plot output w/ patchwork (code just an annotation).
+1)  clear history.
+2)  execute plot code.
+3)  combine plot code (new history) and plot output w/ patchwork (code just an annotation).
 
 Thanks to [ggplot2 extenders discussions](https://github.com/ggplot2-extenders/ggplot-extension-club/discussions/86) for ideas - there are more ideas there that deserve further exploration and may make the implementation better.
 
@@ -62,33 +64,26 @@ ggplot(cars) +
 ggram("This is a ggram.") # this must be on a single line at this early development stage.
 ```
 
-
-
 ```{r eval = F, echo = F}
 ggsave(filename = "man/figures/a_ggram0.png", width = 8, height = 5)
 ```
-
 
 ```{r read, echo = F}
 knitr::include_graphics("man/figures/a_ggram0.png")
 ```
 
-
-
-Notes:  ggram::ggram() fails given the string replacement in the current implementation...
+Notes: ggram::ggram() fails given the string replacement in the current implementation...
 
 ```{r}
 library(tidyverse)
 
 ```
 
-
 # What's inside:
 
 ## `StatCode` & `StatCodeLineNumbers` parse code for disply on a ggplot
 
 <details>
-
 
 ```{r StatCode}
 
@@ -158,7 +153,6 @@ create_plot_code <- function(){
 
 ```
 
-
 ## `code_file_to_code_df` parses code or code file to a dataframe
 
 ```{r code_file_to_code_df}
@@ -175,7 +169,6 @@ code_file_to_code_df <- function(code = NULL, filepath = ".Rhistory"){
   
 }
 ```
-
 
 ```{r}
 # ggram:::clearhistory()
@@ -250,7 +243,7 @@ ggplot() +
   stamp_notebook()
 ```
 
-```{r}
+```{r stamp_*}
 stamp_notebook_college_rule <- function(){
   
 stamp_notebook(width = 40,
@@ -322,8 +315,7 @@ stamp_notebook(vline_color = "darkred",
 
 ```
 
-
-```{r}
+```{r plotting-new-stamps}
 p1 <- ggplot() + 
   stamp_cornsilk_page()
 
@@ -343,8 +335,156 @@ library(patchwork)
 (p1 + p2)/(p3 + p4)
 ```
 
+```{r stamp_code}
+stamp_code <- function(title = "code style",
+                             theme = "light",
+                             width = 35,
+                             height = 20) {
 
-# Styling aspiration, not exported, for graph-side (right-hand-side) 
+  # 0. Error handling // available themes
+
+  supported_themes <- c("dark", "light", "warm")
+
+  if (!theme %in% supported_themes) {
+    cli::cli_abort(
+      c(
+        "x" = "{.val {theme}} is not a supported theme.",
+        "i" = "Please select one of: {.or {.val {supported_themes}}}."
+      )
+    )
+  }
+
+  # 1. :root CSS-Style theme definitions
+
+  palette <- switch(theme,
+                    "dark" = list(
+                      body_color   = "#1e1e1e",
+                      header_stop  = "#2d2d30",
+                      header_start = "#454955",
+                      title_color   = "white",
+                      line_color   = alpha("white", 0.1)
+                    ),
+                    "light" = list(
+                      body_color   = "#FFFFFF",
+                      header_stop  = "#E1E4E8",
+                      header_start = "#FFFFFF",
+                      title_color   = "#24292F",
+                      line_color   = alpha("black", 0.1)
+                    ),
+                    "warm" = list(
+                      body_color   = "#FAF5E4",
+                      header_stop  = "#E6DCCA",
+                      header_start = "#FFF8DC",
+                      title_color   = "#4A403A",
+                      line_color   = alpha("#8C7B75", 0.15)
+                      )
+                    )
+
+  dot_colors <- c("#ff5f56", "#ffbd2e", "#27c93f")
+  dot_positions <- seq(-2.2,-0.2,length = 3)
+
+  # 2. Gradients
+
+  # some funky grid:: stuff here to create a gradient on the header
+  gradient_fill <- grid::linearGradient(
+    colours = c(palette$header_start, palette$header_stop),
+    x1 = 0.5, y1 = 1, x2 = 0.5, y2 = 0
+  )
+  # 3. Lets assemble this together
+
+  list(
+    theme_void(),
+    theme(
+      plot.background  = element_rect(fill = palette$body_color, color = NA),
+      panel.background = element_rect(fill = palette$body_color, color = NA),
+      plot.margin      = margin(0, 0, 0, 0)
+    ),
+
+    scale_y_reverse(limits = c(-1, height), expand = c(0,0)),
+    scale_x_continuous(limits = c(-3, width), expand = c(0,0)),
+
+    # for some reason the header is not position:sticky so this is a small hack
+    annotation_custom(
+      grob = grid::rectGrob(
+        gp = grid::gpar(fill = palette$header_start, col = NA)
+      ),
+      xmin = -Inf, xmax = Inf,
+      ymin = -Inf, ymax = -0.9
+    ),
+
+    # this is the actual gradient
+    annotation_custom(
+      grob = grid::rectGrob(
+        gp = grid::gpar(fill = gradient_fill, col = NA)
+      ),
+      xmin = -Inf, xmax = Inf,
+      ymin = -1, ymax = 0
+    ),
+
+
+    annotate("point", x = dot_positions[1], y = -0.5, color = dot_colors[1], size = 3),
+    annotate("point", x = dot_positions[2], y = -0.5, color = dot_colors[2], size = 3),
+    annotate("point", x = dot_positions[3], y = -0.5, color = dot_colors[3], size = 3),
+
+    annotate("text",
+             x = 0.7, y = -0.5,
+             label = title,
+             color = palette$title_color,
+             size = 4,
+             hjust = 0,
+             family = "mono"),
+
+    # small line that makes a big difference
+    annotate("segment",
+             x = -Inf, xend = Inf,
+             y = 0.05, yend = 0.05,
+             color = palette$line_color,
+             linewidth = 0.6)
+  )
+}
+
+```
+
+```{r stamp_code-example, warning=FALSE}
+{
+set.seed(42)
+
+df <- data.frame(
+  date = seq.Date(as.Date("2023-01-01"), by = "day", length.out = 120),
+  value = cumsum(rnorm(120, mean = 0.15, sd = 1)) + 100
+)
+themes <- list(
+  theme_minimal(base_size = 12),
+    theme(
+    legend.position = "none",
+    plot.background = element_rect(fill = "#1e1e1e", color = NA),
+    panel.background = element_rect(fill = "#1e1e1e", color = NA),
+    panel.grid.major = element_line(color = "#2a2a2a"),
+    panel.grid.minor = element_blank(),
+    axis.text = element_text(color = "#bfbfbf"),
+    axis.title = element_text(color = "#bfbfbf"),
+    plot.title = element_text(colour = '#bfbfbf')
+  )
+)
+}
+clearhistory()
+df |> ggplot(aes(x = date, y = value)) +
+  geom_line(color = "#00FF33", linewidth = 1) +
+  labs(title = "Stock time series", x = NULL, y = NULL) +
+  themes
+ggram(
+  widths = c(3,1),
+  style = stamp_code(theme = "dark", "ggplot2 is cool"),
+  family = "JetBrains Mono",
+  code_color = '#00FF33',
+  highlight_color = '#1e1e1e'
+)
+
+```
+
+*see [tests](tests/dev-tests.R) for more*
+
+# Styling aspiration, not exported, for graph-side (right-hand-side)
 
 ```{r}
 stamp_graph_paper <- function(){
@@ -367,9 +507,6 @@ stamp_graph_paper <- function(){
 #   geom_point()
 ```
 
-
-
-
 ```{r, eval = F}
 library(ggram)
 library(tidyverse)
@@ -380,41 +517,40 @@ ggram:::clearhistory()
 
 ```
 
-
-## `code_df_to_code_plot()` prepares df 
+## `code_df_to_code_plot()` prepares df
 
 ```{r code_df_to_code_plot}
-code_df_to_code_plot <- function(code_df, 
-                                 style = NULL, 
+code_df_to_code_plot <- function(code_df,
+                                 style = NULL,
                                  highlight_colors = c(alpha("grey90",.4), alpha("yellow", .4)),
                                  family = "mono",
                                  size = 1,
-                                 vline_color = "darkred", 
-                                 hline_color = "blue", 
+                                 vline_color = "darkred",
+                                 hline_color = "blue",
                                  paper_color = alpha("whitesmoke", .1),
+                                 code_color = 'black',
                                  width = 35,
-                                 height = 20, 
+                                 height = 20,
                                  accent = stamp_punched_holes()
-                       
-                                 
+
+
                                  ){
-  
+
   style <- style %||% stamp_notebook(vline_color, hline_color, paper_color, width, height, accent)
-  
+
   code_df |>
   ggplot() +
     aes(code = code) +
-    geom_tile(stat = StatCode) + 
-    scale_fill_manual(values = highlight_colors, 
+    geom_tile(stat = StatCode) +
+    scale_fill_manual(values = highlight_colors,
                       breaks = c(FALSE, TRUE), guide = "none") +
-    geom_text(stat = StatCode, alpha = .7, family = family) +
-    geom_text(stat = StatCodeLineNumbers, family = family) +
-    theme(legend.position = "none") + 
+    geom_text(stat = StatCode, alpha = .7, family = family, color = code_color) +
+    geom_text(stat = StatCodeLineNumbers, family = family, color = code_color) +
+    theme(legend.position = "none") +
     style
-  
+
 }
 ```
-
 
 ```{r}
 create_plot_code() |>
@@ -436,10 +572,7 @@ clearhistory <- function(){
 }
 ```
 
-
-
 ## `ggram()` and friends assemble meta plots containing a plot that shows code and the output, stitched together with patchwork
-
 
 ### helpers
 
@@ -447,26 +580,36 @@ clearhistory <- function(){
 
 ```{r helpers}
 get_code <- function(code = NULL){
-  
+
+  # TODO future feature: allow user to insert custom code
+
   # 1. get code from history if not provided
   if(is.null(code)){
-  
+
     # 1.a Get code from history
     temp <- tempfile()
     savehistory(file = temp)
-  
-    # 1.b remove ggram line and collapse
-    readLines(temp)[!stringr::str_detect(readLines(temp), "ggram")] |>  
-    paste(collapse = "\n")
-    
-  }else{
-    
-    code |> paste(collapse = "\n")
-    
-    }
-  
-}
+    lines <- readLines(temp)
 
+    # WHY this complexity? to allow dark themes, we want to adjust the text-background
+    # which is currently set in code_df_to_code_plot.R
+    # as highlight_colors = c(alpha("grey90",.4), alpha("yellow", .4))
+    # Previously, modifying this argument within ggram() broke due to parsing error.
+
+    ggram_start <- max(which(stringr::str_detect(lines, "ggram\\(")))
+
+    if(length(ggram_start) > 0 && ggram_start > 0){
+      # Remove from ggram line to the end (MUST: ggram is the last call)
+      lines <- lines[1:(ggram_start - 1)]
+    }
+
+    # Collapse remaining lines
+    lines |> paste(collapse = "\n")
+
+  }else{
+    code |> paste(collapse = "\n")
+  }
+}
 specify_code_plot <- function(code, style = stamp_notebook()){
   
   code |> 
@@ -509,15 +652,16 @@ specify_textoutput_plot <- function(output){
 ```{r ggram}
 #' @export
 ggram <- function(title = NULL, widths = c(1,1), code = NULL, style = stamp_notebook(), output_plot = NULL, ...){
-  
+
   code <- get_code()
-  code_plot <- specify_code_plot(code, style = style)
+  code_plot <- specify_code_plot(code, style = style,...)
   output <- eval(parse(text = code))
   output_plot <- output
-  
-  patch_code_and_output(code_plot, output_plot, widths, title, ...)
-  
+
+  patch_code_and_output(code_plot, output_plot, widths, title)
+
 }
+
 ```
 
 ```{r, eval = F}
@@ -536,7 +680,6 @@ ggram("Here is my ggram")
 
 ```
 
-
 ```{r ggram_save}
 #' @export
 ggram_save <- function(..., width = 8, height = 5){
@@ -546,8 +689,6 @@ ggram_save <- function(..., width = 8, height = 5){
 }
 ```
 
-
-
 ```{r, eval = F}
 ggram_save("man/figures/a_ggram.png") 
 ```
@@ -555,10 +696,6 @@ ggram_save("man/figures/a_ggram.png")
 ```{r}
 knitr::include_graphics("man/figures/a_ggram.png")
 ```
-
-
-
-
 
 ```{r ggram_df_output}
 #' @export
@@ -574,7 +711,6 @@ ggram_df_output <- function(title = NULL, widths = c(1.1,1), code = NULL, style 
 }
 ```
 
-
 ```{r, eval = F}
 ggram:::clearhistory()
 
@@ -586,7 +722,6 @@ ggram_df_output()
 ggsave(filename = "man/figures/a_ggram_df.png", width = 8, height = 5)
 ```
 
-
 ```{r}
 knitr::include_graphics("man/figures/a_ggram_df.png")
 
@@ -594,9 +729,6 @@ knitr::include_graphics("man/figures/a_ggram_df.png")
   head()" |>
   ggram_df_output(code = _)
 ```
-
-
-
 
 ```{r}
 knitr::include_graphics("man/figures/a_ggram_text.png")
@@ -649,9 +781,6 @@ ggram:::clearhistory()
 
 ```
 
-
-
-
 ```{r}
 knitr::knit_exit()
 
@@ -674,7 +803,6 @@ ggram_tp_output <- function(title = NULL, widths = c(1.1,1), code = NULL, ...){
     
 }
 ```
-
 
 ```{r, eval = F}
 ggram:::clearhistory()
@@ -716,7 +844,6 @@ ggram_text_output()
 
 ggsave(filename = "man/figures/a_ggram_text.png", width = 8, height = 5)
 ```
-
 
 ```{r}
 ggram:::clearhistory()
@@ -778,7 +905,6 @@ ggram("#30DayChartChallenge, #Day3 - #Circular", subtitle = "With ggplot2 extens
 library(ggplot2)
 ```
 
-
 ```{r hadley}
 ggplot(data = mtcars) + # 'I'd get a dataset...' 
   aes(x = wt,  # 'I want to put this on the x-axis' 
@@ -787,8 +913,6 @@ ggplot(data = mtcars) + # 'I'd get a dataset...'
   geom_smooth() + # 'Draw a line'
   facet_wrap(vars(cyl)) # 'Break it up by this variable'
 ```
-
-
 
 ```{r}
 library(tidyverse)
@@ -896,7 +1020,6 @@ knitrExtra::chunk_code_get("hadley") |>
 
 ```
 
-
 ```{r gif_from_ggplots}
 gif_from_ggplots <- function(plots, gif_output_path = "temp.gif"){
   
@@ -919,8 +1042,6 @@ gif_from_ggplots <- function(plots, gif_output_path = "temp.gif"){
 }
 ```
 
-
-
 ```{r}
 library(ggplyr)
 ggplot(cars) + intercept() + 
@@ -931,9 +1052,7 @@ ggplot(cars) + intercept() +
 
 ```
 
-  
-  
-```  
+```         
 library(patchwork)
 (p1 + p2) /
   (p3 + p4) /
@@ -951,6 +1070,4 @@ ggsave("p8.pdf", p8, height=8, width=8)
 pdf_list <- list.files(pattern = "p\\d", )
 
 pdftools::pdf_combine(pdf_list, output = "slideshow.pdf")
-
 ```
-
