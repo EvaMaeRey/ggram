@@ -41,7 +41,7 @@ StatCode <- ggproto("StatCode", Stat,
 StatCodeLineNumbers <- ggproto("StatCodeLineNumbers", Stat,
                     compute_panel = compute_panel_code_line_numbers,
                     default_aes = aes(y = after_stat(row),
-                                      x = after_stat(-2.3),
+                                      x = after_stat(-0.5),
                                       hjust = after_stat(1),
                                       label = after_stat(row))
                     )
