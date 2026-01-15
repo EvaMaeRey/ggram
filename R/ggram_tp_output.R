@@ -1,6 +1,6 @@
 ggram_tp_output <- function(title = NULL, widths = c(1.1,1), code = NULL, ...){
   
-  code <- get_code(code = code)
+  code <- get_code(code = code) # code %||% clipr::read_clip()
   code_plot <- specify_code_plot(code)
   output <- eval(parse(text = code))
   tp_output <- output |> tidypivot::collect() 
