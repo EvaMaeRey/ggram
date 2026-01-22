@@ -39,10 +39,10 @@ user experience.
 
 We’re in the proof-of-concept phase (expect fragility), but the idea is:
 
-1)  clear history.
-2)  execute plot code.
-3)  combine plot code (new history) and plot output w/ patchwork (code
-    just an annotation).
+0)  write some amazing plot code
+1)  copy the code you would like to quote
+2)  combine plot code (copied) and plot output w/ patchwork (code just
+    an annotation).
 
 Thanks to [ggplot2 extenders
 discussions](https://github.com/ggplot2-extenders/ggplot-extension-club/discussions/86)
@@ -59,10 +59,6 @@ The following should be done in an interactive session:
 
 ``` r
 library(ggram)
-
-###
-# clear history with your IDE
-###
 
 library(ggplot2)
 #
@@ -145,12 +141,9 @@ StatCodeLineNumbers <- ggproto("StatCodeLineNumbers", Stat,
 # for demo purposes only
 create_plot_code <- function(){
   
-  "library(ggplot2)
-  #
-  ggplot(cars) + 
-  aes(speed, dist) + 
-  geom_point()
-  "
+c("library(ggplot2)"  ,    " "     ,                 "ggplot(cars) +"    ,    "  aes(speed, dist) #<< + ", "  geom_point() "   )    
+
+
 
   }
 ```
@@ -160,14 +153,16 @@ create_plot_code <- function(){
 ``` r
 code_file_to_code_df <- function(code = NULL, filepath = ".Rhistory"){
   
-  if(is.null(code)){code <- readLines(filepath) |> 
-    paste(collapse = "\n") }
+  # if(is.null(code)){code <- readLines(filepath) |> 
+  #   paste(collapse = "\n") }
+  
+  code <- code %||% clipr::read_clip()
   
   code |> 
-    styler::style_text() |> 
+    # styler::style_text() |> 
     as.character() |>
-    data.frame(code = _) |>
-    filter(!stringr::str_detect(code, "^ggram.+"))
+    data.frame(code = _) #|>
+    # filter(!stringr::str_detect(code, "^ggram.+"))
   
 }
 ```
@@ -187,7 +182,7 @@ ggplot(cars) +
 create_plot_code() |>
 code_file_to_code_df() |> 
   compute_panel_code()
-#> # A tibble: 60 × 7
+#> # A tibble: 63 × 7
 #> # Groups:   row [4]
 #>    code    row is_highlighted     x is_character is_code label
 #>    <chr> <int> <lgl>          <int> <lgl>        <lgl>   <chr>
@@ -201,7 +196,7 @@ code_file_to_code_df() |>
 #>  8 (         1 FALSE              8 TRUE         TRUE    (    
 #>  9 g         1 FALSE              9 TRUE         TRUE    g    
 #> 10 g         1 FALSE             10 TRUE         TRUE    g    
-#> # ℹ 50 more rows
+#> # ℹ 53 more rows
 
 
 create_plot_code() |>
@@ -624,7 +619,7 @@ ggram <- function(title = NULL, widths = c(1,1), code = NULL,
                   code_style_args = specify_code_plot_style(),
                    output_plot = NULL, ...){
   
-  code <- get_code(code = code) #code %||% clipr::read_clip()  # clip not clear history
+  code <- code %||% clipr::read_clip()  # clip not clear history, get_code(code = code) #
   code_plot <- specify_code_plot(code, code_style_args = code_style_args)
   output <- eval(parse(text = code))
   output_plot <- output
@@ -635,7 +630,6 @@ ggram <- function(title = NULL, widths = c(1,1), code = NULL,
 ```
 
 ``` r
-ggram:::clearhistory()
 
 library(tidyverse)
 #
@@ -645,15 +639,7 @@ ggplot(cars) +
   geom_smooth() #<<
 
 
-
-'library(tidyverse)
-#
-ggplot(cars) + 
-  aes(speed, 
-  dist) + 
-  geom_point() + 
-  geom_smooth() #<<' |>
-ggram("Here is my ggram", code = _)
+ggram("Here is my ggram")
 ```
 
 ``` r
@@ -679,7 +665,7 @@ knitr::include_graphics("man/figures/a_ggram.png")
 #' @export
 ggram_df_output <- function(title = NULL, widths = c(1.1,1), code = NULL, code_style_args = specify_code_plot_style(), ...){
   
-  code <- get_code(code = code) # code %||% clipr::read_clip()
+  code <- code %||% clipr::read_clip() # get_code(code = code) # 
   code_plot <- specify_code_plot(code, code_style_args = code_style_args)
   output <- eval(parse(text = code))
   output_plot <- gt::gt(output)
@@ -702,18 +688,10 @@ ggsave(filename = "man/figures/a_ggram_df.png", width = 8, height = 5)
 
 ``` r
 knitr::include_graphics("man/figures/a_ggram_df.png")
-```
 
-<img src="man/figures/a_ggram_df.png" width="100%" />
-
-``` r
-
-"cars |> 
-  head()" |>
+c("cars |> head()") |>
   ggram_df_output(code = _)
 ```
-
-<img src="man/figures/README-unnamed-chunk-21-2.png" width="100%" />
 
 ``` r
 knitr::include_graphics("man/figures/a_ggram_text.png")
@@ -727,7 +705,7 @@ knitr::include_graphics("man/figures/a_ggram_text.png")
 usethis::use_package("ggplot2")
 usethis::use_package("patchwork")
 usethis::use_package("stringr")
-usethis::use_package("styler")
+# usethis::use_package("styler")
 usethis::use_package("dplyr")
 usethis::use_package("tidyr")
 # usethis::use_package("magick")
@@ -746,10 +724,11 @@ knitrExtra::chunk_names_get()
 #> [28] "unnamed-chunk-19"     "ggram_df_output"      "unnamed-chunk-20"    
 #> [31] "unnamed-chunk-21"     "unnamed-chunk-22"     "unnamed-chunk-23"    
 #> [34] "unnamed-chunk-24"     "unnamed-chunk-25"     "unnamed-chunk-26"    
-#> [37] "ggram_tp_output"      "unnamed-chunk-27"     "ggram_text_output"   
-#> [40] "unnamed-chunk-28"     "unnamed-chunk-29"     "unnamed-chunk-30"    
-#> [43] "hadley"               "unnamed-chunk-31"     "unnamed-chunk-32"    
-#> [46] "gif_from_ggplots"     "unnamed-chunk-33"
+#> [37] "unnamed-chunk-27"     "unnamed-chunk-28"     "ggram_tp_output"     
+#> [40] "unnamed-chunk-29"     "ggram_text_output"    "unnamed-chunk-30"    
+#> [43] "unnamed-chunk-31"     "unnamed-chunk-32"     "hadley"              
+#> [46] "unnamed-chunk-33"     "unnamed-chunk-34"     "gif_from_ggplots"    
+#> [49] "unnamed-chunk-35"
 knitrExtra::chunk_to_dir(
   c("clearhistory", 
     "StatCode", 
@@ -779,6 +758,51 @@ ggram:::clearhistory()
 
 "cars" |> 
   ggram::ggram_df_output()
+```
+
+``` r
+library(ggplot2) 
+
+cars |>
+  ggplot() + 
+  aes(x = speed, y = dist) + 
+  geom_point() + 
+  geom_smooth() + 
+  theme_classic( #<<
+    paper = "darkseagreen",  #<<
+    ink = "lightyellow" |> #<<
+      alpha(.7), #<<
+    accent = "orange", #<<
+    base_size = 18#<< 
+    )  #<<
+
+
+ggram("ggram:: Familiar with ggplot2 v4.0's new theming?" , subtitle = "Now it's *so* easy to specify a dramatically different look and feel -- geom_*()s are responsive to \ntheming choices like the new 'paper', 'ink', 'accent' args (as well as old 'base_size')🚀📊🤯", caption = "made with {ggram}", widths = c(1,1))
+```
+
+``` r
+library(ggplot2) 
+
+cars |>
+  ggplot() + 
+  aes(x = speed, y = dist) + 
+  geom_point() +
+  geom_smooth() +
+  theme_classic(paper = "grey24", #<<
+                ink = "", #<<
+                base_size = 12,
+                accent = "lightblue") #<<
+  
+  
+   |>
+        ggfx::with_outer_glow("magenta", 
+                          sigma = 10) +
+  aes(size = 9 |> I()) + 
+  aes(color = "grey24" |> I()) +
+
+
+
+ggram("ggplot2 v4.0's new theming to write ggblackboard?" , subtitle = "ggplot2 v4.0's new theming control over geom_*()s and stat_*()s color via paper ink accent,")
 ```
 
 ``` r
