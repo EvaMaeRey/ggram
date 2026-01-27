@@ -139,17 +139,29 @@ StatCodeLineNumbers <- ggproto("StatCodeLineNumbers", Stat,
 
 </details>
 
-```{r}
+```{r create_plot_code}
 # for demo purposes only
 create_plot_code <- function(){
   
-c("library(ggplot2)"  ,    " "     ,                 "ggplot(cars) +"    ,    "  aes(speed, dist) #<< + ", "  geom_point() "   )    
+"library(ggplot2)
 
-
+ggplot(cars) +
+  aes(speed, dist) #<< + 
+  geom_point()"
 
   }
 
 
+code_to_vector <- function(code){
+  
+  if(code |> is.null()){NULL}else{str_split(code, "\\n")[[1]]}
+  
+}
+```
+
+```{r}
+create_plot_code() |> 
+  code_to_vector()
 ```
 
 
@@ -158,12 +170,10 @@ c("library(ggplot2)"  ,    " "     ,                 "ggplot(cars) +"    ,    " 
 ```{r code_file_to_code_df}
 code_file_to_code_df <- function(code = NULL, filepath = ".Rhistory"){
   
-  # if(is.null(code)){code <- readLines(filepath) |> 
-  #   paste(collapse = "\n") }
+  code_vector <- code |> code_to_vector()
+  code_vector <- code_vector %||% clipr::read_clip()
   
-  code <- code %||% clipr::read_clip()
-  
-  code |> 
+  code_vector |> 
     # styler::style_text() |> 
     as.character() |>
     data.frame(code = _) #|>
@@ -192,6 +202,20 @@ code_file_to_code_df() |>
   geom_text(stat = StatCode) + 
   geom_tile(stat = StatCode, alpha = .2) + 
   scale_y_reverse()
+
+"library(ggplot2)
+
+ggplot(cars) +
+  aes(speed, dist) #<< + 
+geom_point()" |>
+code_file_to_code_df(code = _) |>
+  ggplot() + 
+  aes(code = code) + 
+  geom_text(stat = StatCode) + 
+  geom_tile(stat = StatCode, alpha = .2) + 
+  scale_y_reverse()
+
+
 ```
 
 ## `stamp_notebook` contains instructions for stamping down a notebook paper look
@@ -225,7 +249,7 @@ stamp_notebook <- function(vline_color = "darkred",
     # coord_equal(),
     scale_x_continuous(limits = c(-3, width)),
     annotate("rect", xmin = -Inf, xmax = 0, ymin = -Inf, ymax = Inf, 
-             fill = alpha("grey90", .1)),
+             fill = ggplot2::alpha("grey90", .1)),
     geom_vline(xintercept = 0, color = vline_color) ,
     geom_hline(yintercept = 1:29 + .5, color = hline_color, linewidth = .2, alpha = .5),
     accent
@@ -248,7 +272,7 @@ stamp_graph_paper <- function(){
   list(
     
     theme_classic(),
-    theme(plot.background = element_rect(fill = alpha("whitesmoke", .1))),
+    theme(plot.background = element_rect(fill = ggplot2::alpha("whitesmoke", .1))),
     annotate(geom = "segment", x = I(-3:23/20), xend = I(-3:23/20), y = I(-.2), yend = I(1.1), color = "blue", alpha = .15, linewidth = .2) ,
     annotate(geom = "segment", y = I(-3:23/20), yend = I(-3:23/20), x = I(-.2), xend = I(1.1),  color = "blue", alpha = .15,  linewidth = .2),
     NULL,  
@@ -279,22 +303,26 @@ ggram:::clearhistory()
 
 ## `code_df_to_code_plot()` prepares df 
 
-```{r}
+```{r specify_code_plot_style}
 specify_code_plot_style <- function(
-                            highlight_colors = c(alpha("grey90",.4), alpha("yellow", .4)),
+                            highlight_colors = c(ggplot2::alpha("grey90",.4), alpha("yellow", .4)),
                                  family = "mono",
                                  size = 1,
                                  vline_color = "darkred", 
                                  hline_color = "blue", 
-                                 paper_color = alpha("whitesmoke", .1),
+                                 paper_color = ggplot2::alpha("whitesmoke", .1),
                                  width = 35,
                                  height = 20, 
                                  accent = stamp_punched_holes()){
   
   list(highlight_colors = highlight_colors, 
-       family = family,size = size, vline_color = vline_color,      
-       hline_color = hline_color, paper_color = paper_color, width = width, 
-       height = height, accent = accent)
+       family = family,size = size, 
+       vline_color = vline_color,      
+       hline_color = hline_color, 
+       paper_color = paper_color, 
+       width = width, 
+       height = height, 
+       accent = accent)
 
 }
 
@@ -337,8 +365,9 @@ create_plot_code() |>
   code_file_to_code_df() |>
   code_df_to_code_plot()
 
-create_plot_code() |>
-  code_file_to_code_df() |>
+"ggplot(cars) + 
+  aes(x,y) "|>
+  code_file_to_code_df(code = _) |>
   code_df_to_code_plot(style_specs = 
                          specify_code_plot_style(family = "sans",
                                                  paper_color = "green",
@@ -361,8 +390,8 @@ code_plot_style_college_rule <- function(){
 code_plot_style_typed <- function(){
   
   new <- list(vline_color = "darkolivegreen", 
-               hline_color = alpha("lightgrey", .1), 
-               paper_color = alpha("whitesmoke", .1),
+               hline_color = ggplot2::alpha("lightgrey", .1), 
+               paper_color = ggplot2::alpha("whitesmoke", .1),
                width = 50,
                height = 30,
                accent = NULL)
@@ -375,9 +404,9 @@ code_plot_style_typed <- function(){
 
 code_plot_style_cornsilk <- function(){
   
-  new <- list(vline_color = alpha("cornsilk2",0), 
-               hline_color = alpha("cornsilk2",0), 
-               paper_color = alpha("cornsilk2",1),
+  new <- list(vline_color = ggplot2::alpha("cornsilk2",0), 
+               hline_color = ggplot2::alpha("cornsilk2",0), 
+               paper_color = ggplot2::alpha("cornsilk2",1),
                width = 50,
                height = 30,
                accent = NULL)
@@ -404,9 +433,9 @@ stamp_buttons_and_bar <- function(){
 
 code_plot_style_dark_mode <- function(){
   
-  new <- list(vline_color = alpha("grey30",0), 
-               hline_color = alpha("grey30",0), 
-               paper_color = alpha("grey30",1),
+  new <- list(vline_color = ggplot2::alpha("grey30",0), 
+               hline_color = ggplot2::alpha("grey30",0), 
+               paper_color = ggplot2::alpha("grey30",1),
                width = 50,
                height = 30,
                accent = stamp_buttons_and_bar()
@@ -427,7 +456,7 @@ code_plot_style_legal_pad <- function(){
   
   new <- list(vline_color = "darkred", 
                hline_color = "blue", 
-               paper_color = alpha("yellow", .2),
+               paper_color = ggplot2::alpha("yellow", .2),
                width = 40,
                height = 25)
   
@@ -450,7 +479,7 @@ create_plot_code() |>
   code_file_to_code_df() |>
   code_df_to_code_plot(code_plot_style_legal_pad())
 
-create_plot_code() |>
+"library(ggplot2)\n\nggplot(cars) +\n  aes(speed, dist) #<< + \n  geom_point()" |>
   code_file_to_code_df() |>
   code_df_to_code_plot(code_plot_style_dark_mode())
 
@@ -459,22 +488,6 @@ create_plot_code() |>
   code_df_to_code_plot(code_plot_style_typed())
 ```
 
-
-
-
-
-```{r}
-
-library(tidyverse)
-#
-ggplot(cars) + 
-  aes(speed, dist) + 
-  geom_point() + 
-  geom_smooth() #<<
-
-
-
-```
 
 
 
@@ -502,28 +515,28 @@ clearhistory <- function(){
 <details>
 
 ```{r helpers}
-get_code <- function(code = NULL){
-  
-  # 1. get code from history if not provided
-  if(is.null(code)){
-  
-    # 1.a Get code from history
-    temp <- tempfile()
-    savehistory(file = temp)
-  
-    # 1.b remove ggram line and collapse
-    readLines(temp)[!stringr::str_detect(readLines(temp), "ggram")] |>  
-    paste(collapse = "\n")
-    
-  }else{
-    
-    code |> paste(collapse = "\n")
-    
-    }
-  
-}
+# get_code <- function(code = NULL){
+#   
+#   # 1. get code from history if not provided
+#   if(is.null(code)){
+#   
+#     # 1.a Get code from history
+#     temp <- tempfile()
+#     savehistory(file = temp)
+#   
+#     # 1.b remove ggram line and collapse
+#     readLines(temp)[!stringr::str_detect(readLines(temp), "ggram")] |>  
+#     paste(collapse = "\n")
+#     
+#   }else{
+#     
+#     code |> paste(collapse = "\n")
+#     
+#     }
+#   
+# }
 
-specify_code_plot <- function(code, code_style_args = list()){
+specify_code_plot <- function(code = NULL, code_style_args = list()){
   
   code_df <- code |> 
     code_file_to_code_df()
@@ -564,6 +577,12 @@ specify_textoutput_plot <- function(output){
 
 </details>
 
+
+```{r}
+create_plot_code() |>
+  specify_code_plot()
+```
+
 ### user-facing ggram and friends
 
 ```{r ggram}
@@ -572,33 +591,45 @@ ggram <- function(title = NULL, widths = c(1,1), code = NULL,
                   code_style_args = specify_code_plot_style(),
                    output_plot = NULL, ...){
   
-  code <- code %||% clipr::read_clip()  # clip not clear history, get_code(code = code) #
   code_plot <- specify_code_plot(code, code_style_args = code_style_args)
-  output <- eval(parse(text = code))
+
+  code_vector <- code |> code_to_vector()
+  code_vector <- code %||% clipr::read_clip()  # clip not clear history, get_code(code = code) #
+  output <- eval(parse(text = code_vector))
+  
   output_plot <- output
-  
+  # # 
   patch_code_and_output(code_plot, output_plot, widths, title, ...)
-  
+
 }
 
 
 
 ```
 
-
-
 ```{r, eval = F}
-
 library(tidyverse)
-#
-ggplot(cars) + 
-  aes(speed, dist) + 
-  geom_point() + 
-  geom_smooth() #<<
 
+ggplot(cars) +
+  aes(speed, dist) +
+  geom_point() +
+  geom_smooth() #<<
 
 ggram("Here is my ggram")
 ```
+
+
+```{r, eval = T}
+"library(tidyverse)
+
+ggplot(cars) +
+  aes(speed, dist) +
+  geom_point() +
+  geom_smooth() #<<" |>
+  ggram(code = _, "Here is my ggram")
+
+```
+
 
 
 ```{r ggram_save}
@@ -621,6 +652,29 @@ knitr::include_graphics("man/figures/a_ggram.png")
 ```
 
 
+# example with retheming...
+
+```{r, eval = F}
+#############
+##### CTR-C, copy target code ###
+library(tidyverse)
+#
+ggplot(cars) + 
+  aes(speed, dist) + 
+  geom_point() + 
+  geom_smooth() #<<
+#############
+#############
+
+my_style <- specify_code_plot_style(
+  highlight_colors = c("grey", "orange") |> alpha(.25), 
+  vline_color = "transparent", 
+  hline_color = "grey",
+  accent = NULL)
+
+ggram("Here is my ggram", code_style_args = my_style)
+```
+
 
 
 
@@ -628,6 +682,7 @@ knitr::include_graphics("man/figures/a_ggram.png")
 #' @export
 ggram_df_output <- function(title = NULL, widths = c(1.1,1), code = NULL, code_style_args = specify_code_plot_style(), ...){
   
+  code <- code |> code_to_vector()
   code <- code %||% clipr::read_clip() # get_code(code = code) # 
   code_plot <- specify_code_plot(code, code_style_args = code_style_args)
   output <- eval(parse(text = code))
@@ -685,6 +740,7 @@ knitrExtra::chunk_names_get()
 knitrExtra::chunk_to_dir(
   c("clearhistory", 
     "StatCode", 
+    "specify_code_plot_style",
     "stamp_notebook", 
     "helpers",
     "ggram", 
@@ -693,10 +749,12 @@ knitrExtra::chunk_to_dir(
     "ggram_text_output",
     "ggram_tp_output",
     "code_df_to_code_plot",
-    "ggram_save"))
+    "ggram_save",
+    "create_plot_code"))
 ```
 
 ```{r, eval = F}
+rm(list = ls())
 devtools::document()
 devtools::check(".")
 devtools::install(pkg = ".", upgrade = "never") 
@@ -711,12 +769,11 @@ ggram:::clearhistory()
 
 "cars" |> 
   ggram::ggram_df_output()
-
 ```
 
 
-```{r, eval = F}
-library(ggplot2) 
+```{r, eval = T}
+'library(ggplot2) 
 
 cars |>
   ggplot() + 
@@ -729,40 +786,8 @@ cars |>
       alpha(.7), #<<
     accent = "orange", #<<
     base_size = 18#<< 
-    )  #<<
-
-
-ggram("ggram:: Familiar with ggplot2 v4.0's new theming?" , subtitle = "Now it's *so* easy to specify a dramatically different look and feel -- geom_*()s are responsive to \ntheming choices like the new 'paper', 'ink', 'accent' args (as well as old 'base_size')🚀📊🤯", caption = "made with {ggram}", widths = c(1,1))
-```
-
-
-```{r, eval = F}
-library(ggplot2) 
-
-cars |>
-  ggplot() + 
-  aes(x = speed, y = dist) + 
-  geom_point() +
-  geom_smooth() +
-  theme_classic(paper = "grey24", #<<
-                ink = "", #<<
-                base_size = 12,
-                accent = "lightblue") #<<
-  
-  
-   |>
-        ggfx::with_outer_glow("magenta", 
-                          sigma = 10) +
-  aes(size = 9 |> I()) + 
-  aes(color = "grey24" |> I()) +
-
-
-
-ggram("ggplot2 v4.0's new theming to write ggblackboard?" , subtitle = "ggplot2 v4.0's new theming control over geom_*()s and stat_*()s color via paper ink accent,")
-
-
-
-
+    )  #<<' |>
+  ggram(code = _, "ggram:: Familiar with ggplot2 v4.0's new theming?", subtitle = "Now it's *so* easy to specify a dramatically different look and feel -- geom_*()s are responsive to \ntheming choices like the new 'paper', 'ink', 'accent' args (as well as old 'base_size')🚀📊🤯", caption = "made with {ggram}", widths = c(1,1))
 ```
 
 
@@ -1046,6 +1071,25 @@ ggplot(cars) + intercept() +
 
 ```
 
+
+
+```{r}
+library(ggplot2)
+
+cars |>
+  ggplot() + 
+  aes(
+    x = speed,
+    y = dist, 
+    color = I("blue") #<<
+      ) + 
+  geom_point() + 
+  theme_gray(base_size = 18)
+
+
+ggram::ggram("ggram:: Have you used the I() 'as is' function to set aesthetics? (>= v3.5 behaivor! 👀🚨)",
+             subtitle = "Who hasn't made the occasionally 'aes(color = \"blue\")' mistake? 🤔 Probably no one!\nUsing I() in the aes() call can be a quick, in-place fix! 👍")
+```
   
   
 ```  

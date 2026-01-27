@@ -1,11 +1,9 @@
 code_file_to_code_df <- function(code = NULL, filepath = ".Rhistory"){
   
-  # if(is.null(code)){code <- readLines(filepath) |> 
-  #   paste(collapse = "\n") }
+  code_vector <- code |> code_to_vector()
+  code_vector <- code_vector %||% clipr::read_clip()
   
-  code <- code %||% clipr::read_clip()
-  
-  code |> 
+  code_vector |> 
     # styler::style_text() |> 
     as.character() |>
     data.frame(code = _) #|>

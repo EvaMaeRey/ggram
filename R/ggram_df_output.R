@@ -1,6 +1,7 @@
 #' @export
 ggram_df_output <- function(title = NULL, widths = c(1.1,1), code = NULL, code_style_args = specify_code_plot_style(), ...){
   
+  code <- code |> code_to_vector()
   code <- code %||% clipr::read_clip() # get_code(code = code) # 
   code_plot <- specify_code_plot(code, code_style_args = code_style_args)
   output <- eval(parse(text = code))

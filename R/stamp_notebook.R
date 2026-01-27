@@ -24,7 +24,7 @@ stamp_notebook <- function(vline_color = "darkred",
     # coord_equal(),
     scale_x_continuous(limits = c(-3, width)),
     annotate("rect", xmin = -Inf, xmax = 0, ymin = -Inf, ymax = Inf, 
-             fill = alpha("grey90", .1)),
+             fill = ggplot2::alpha("grey90", .1)),
     geom_vline(xintercept = 0, color = vline_color) ,
     geom_hline(yintercept = 1:29 + .5, color = hline_color, linewidth = .2, alpha = .5),
     accent

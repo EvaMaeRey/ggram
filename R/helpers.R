@@ -1,25 +1,25 @@
-get_code <- function(code = NULL){
-  
-  # 1. get code from history if not provided
-  if(is.null(code)){
-  
-    # 1.a Get code from history
-    temp <- tempfile()
-    savehistory(file = temp)
-  
-    # 1.b remove ggram line and collapse
-    readLines(temp)[!stringr::str_detect(readLines(temp), "ggram")] |>  
-    paste(collapse = "\n")
-    
-  }else{
-    
-    code |> paste(collapse = "\n")
-    
-    }
-  
-}
+# get_code <- function(code = NULL){
+#   
+#   # 1. get code from history if not provided
+#   if(is.null(code)){
+#   
+#     # 1.a Get code from history
+#     temp <- tempfile()
+#     savehistory(file = temp)
+#   
+#     # 1.b remove ggram line and collapse
+#     readLines(temp)[!stringr::str_detect(readLines(temp), "ggram")] |>  
+#     paste(collapse = "\n")
+#     
+#   }else{
+#     
+#     code |> paste(collapse = "\n")
+#     
+#     }
+#   
+# }
 
-specify_code_plot <- function(code, code_style_args = list()){
+specify_code_plot <- function(code = NULL, code_style_args = list()){
   
   code_df <- code |> 
     code_file_to_code_df()

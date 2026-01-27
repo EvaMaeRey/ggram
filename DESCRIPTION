@@ -15,7 +15,6 @@ Imports:
     ggplot2,
     patchwork,
     stringr,
-    styler,
     tidyr
 Suggests: 
     knitr,

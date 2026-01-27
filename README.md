@@ -20,6 +20,7 @@
     patchwork](#ggram-and-friends-assemble-meta-plots-containing-a-plot-that-shows-code-and-the-output-stitched-together-with-patchwork)
     - [helpers](#helpers)
     - [user-facing ggram and friends](#user-facing-ggram-and-friends)
+- [example with retheming…](#example-with-retheming)
 - [Minimally package](#minimally-package)
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -141,11 +142,28 @@ StatCodeLineNumbers <- ggproto("StatCodeLineNumbers", Stat,
 # for demo purposes only
 create_plot_code <- function(){
   
-c("library(ggplot2)"  ,    " "     ,                 "ggplot(cars) +"    ,    "  aes(speed, dist) #<< + ", "  geom_point() "   )    
+"library(ggplot2)
 
-
+ggplot(cars) +
+  aes(speed, dist) #<< + 
+  geom_point()"
 
   }
+
+
+code_to_vector <- function(code){
+  
+  if(code |> is.null()){NULL}else{str_split(code, "\\n")[[1]]}
+  
+}
+```
+
+``` r
+create_plot_code() |> 
+  code_to_vector()
+#> [1] "library(ggplot2)"          ""                         
+#> [3] "ggplot(cars) +"            "  aes(speed, dist) #<< + "
+#> [5] "  geom_point()"
 ```
 
 ## `code_file_to_code_df` parses code or code file to a dataframe
@@ -153,12 +171,10 @@ c("library(ggplot2)"  ,    " "     ,                 "ggplot(cars) +"    ,    " 
 ``` r
 code_file_to_code_df <- function(code = NULL, filepath = ".Rhistory"){
   
-  # if(is.null(code)){code <- readLines(filepath) |> 
-  #   paste(collapse = "\n") }
+  code_vector <- code |> code_to_vector()
+  code_vector <- code_vector %||% clipr::read_clip()
   
-  code <- code %||% clipr::read_clip()
-  
-  code |> 
+  code_vector |> 
     # styler::style_text() |> 
     as.character() |>
     data.frame(code = _) #|>
@@ -182,7 +198,7 @@ ggplot(cars) +
 create_plot_code() |>
 code_file_to_code_df() |> 
   compute_panel_code()
-#> # A tibble: 63 × 7
+#> # A tibble: 62 × 7
 #> # Groups:   row [4]
 #>    code    row is_highlighted     x is_character is_code label
 #>    <chr> <int> <lgl>          <int> <lgl>        <lgl>   <chr>
@@ -196,7 +212,7 @@ code_file_to_code_df() |>
 #>  8 (         1 FALSE              8 TRUE         TRUE    (    
 #>  9 g         1 FALSE              9 TRUE         TRUE    g    
 #> 10 g         1 FALSE             10 TRUE         TRUE    g    
-#> # ℹ 53 more rows
+#> # ℹ 52 more rows
 
 
 create_plot_code() |>
@@ -209,6 +225,23 @@ code_file_to_code_df() |>
 ```
 
 <img src="man/figures/README-unnamed-chunk-7-2.png" width="100%" />
+
+``` r
+
+"library(ggplot2)
+
+ggplot(cars) +
+  aes(speed, dist) #<< + 
+geom_point()" |>
+code_file_to_code_df(code = _) |>
+  ggplot() + 
+  aes(code = code) + 
+  geom_text(stat = StatCode) + 
+  geom_tile(stat = StatCode, alpha = .2) + 
+  scale_y_reverse()
+```
+
+<img src="man/figures/README-unnamed-chunk-7-3.png" width="100%" />
 
 ## `stamp_notebook` contains instructions for stamping down a notebook paper look
 
@@ -241,7 +274,7 @@ stamp_notebook <- function(vline_color = "darkred",
     # coord_equal(),
     scale_x_continuous(limits = c(-3, width)),
     annotate("rect", xmin = -Inf, xmax = 0, ymin = -Inf, ymax = Inf, 
-             fill = alpha("grey90", .1)),
+             fill = ggplot2::alpha("grey90", .1)),
     geom_vline(xintercept = 0, color = vline_color) ,
     geom_hline(yintercept = 1:29 + .5, color = hline_color, linewidth = .2, alpha = .5),
     accent
@@ -266,7 +299,7 @@ stamp_graph_paper <- function(){
   list(
     
     theme_classic(),
-    theme(plot.background = element_rect(fill = alpha("whitesmoke", .1))),
+    theme(plot.background = element_rect(fill = ggplot2::alpha("whitesmoke", .1))),
     annotate(geom = "segment", x = I(-3:23/20), xend = I(-3:23/20), y = I(-.2), yend = I(1.1), color = "blue", alpha = .15, linewidth = .2) ,
     annotate(geom = "segment", y = I(-3:23/20), yend = I(-3:23/20), x = I(-.2), xend = I(1.1),  color = "blue", alpha = .15,  linewidth = .2),
     NULL,  
@@ -296,20 +329,24 @@ ggram:::clearhistory()
 
 ``` r
 specify_code_plot_style <- function(
-                            highlight_colors = c(alpha("grey90",.4), alpha("yellow", .4)),
+                            highlight_colors = c(ggplot2::alpha("grey90",.4), alpha("yellow", .4)),
                                  family = "mono",
                                  size = 1,
                                  vline_color = "darkred", 
                                  hline_color = "blue", 
-                                 paper_color = alpha("whitesmoke", .1),
+                                 paper_color = ggplot2::alpha("whitesmoke", .1),
                                  width = 35,
                                  height = 20, 
                                  accent = stamp_punched_holes()){
   
   list(highlight_colors = highlight_colors, 
-       family = family,size = size, vline_color = vline_color,      
-       hline_color = hline_color, paper_color = paper_color, width = width, 
-       height = height, accent = accent)
+       family = family,size = size, 
+       vline_color = vline_color,      
+       hline_color = hline_color, 
+       paper_color = paper_color, 
+       width = width, 
+       height = height, 
+       accent = accent)
 
 }
 ```
@@ -342,19 +379,20 @@ create_plot_code() |>
   code_df_to_code_plot()
 ```
 
-<img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" />
 
 ``` r
 
-create_plot_code() |>
-  code_file_to_code_df() |>
+"ggplot(cars) + 
+  aes(x,y) "|>
+  code_file_to_code_df(code = _) |>
   code_df_to_code_plot(style_specs = 
                          specify_code_plot_style(family = "sans",
                                                  paper_color = "green",
                                                  accent = NULL))
 ```
 
-<img src="man/figures/README-unnamed-chunk-13-2.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-12-2.png" width="100%" />
 
 ``` r
 code_plot_style_college_rule <- function(){
@@ -370,8 +408,8 @@ code_plot_style_college_rule <- function(){
 code_plot_style_typed <- function(){
   
   new <- list(vline_color = "darkolivegreen", 
-               hline_color = alpha("lightgrey", .1), 
-               paper_color = alpha("whitesmoke", .1),
+               hline_color = ggplot2::alpha("lightgrey", .1), 
+               paper_color = ggplot2::alpha("whitesmoke", .1),
                width = 50,
                height = 30,
                accent = NULL)
@@ -384,9 +422,9 @@ code_plot_style_typed <- function(){
 
 code_plot_style_cornsilk <- function(){
   
-  new <- list(vline_color = alpha("cornsilk2",0), 
-               hline_color = alpha("cornsilk2",0), 
-               paper_color = alpha("cornsilk2",1),
+  new <- list(vline_color = ggplot2::alpha("cornsilk2",0), 
+               hline_color = ggplot2::alpha("cornsilk2",0), 
+               paper_color = ggplot2::alpha("cornsilk2",1),
                width = 50,
                height = 30,
                accent = NULL)
@@ -413,9 +451,9 @@ stamp_buttons_and_bar <- function(){
 
 code_plot_style_dark_mode <- function(){
   
-  new <- list(vline_color = alpha("grey30",0), 
-               hline_color = alpha("grey30",0), 
-               paper_color = alpha("grey30",1),
+  new <- list(vline_color = ggplot2::alpha("grey30",0), 
+               hline_color = ggplot2::alpha("grey30",0), 
+               paper_color = ggplot2::alpha("grey30",1),
                width = 50,
                height = 30,
                accent = stamp_buttons_and_bar()
@@ -472,7 +510,7 @@ code_plot_style_legal_pad <- function(){
   
   new <- list(vline_color = "darkred", 
                hline_color = "blue", 
-               paper_color = alpha("yellow", .2),
+               paper_color = ggplot2::alpha("yellow", .2),
                width = 40,
                height = 25)
   
@@ -488,7 +526,7 @@ create_plot_code() |>
   code_df_to_code_plot(code_plot_style_college_rule())
 ```
 
-<img src="man/figures/README-unnamed-chunk-15-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-14-1.png" width="100%" />
 
 ``` r
 
@@ -497,16 +535,16 @@ create_plot_code() |>
   code_df_to_code_plot(code_plot_style_legal_pad())
 ```
 
-<img src="man/figures/README-unnamed-chunk-15-2.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-14-2.png" width="100%" />
 
 ``` r
 
-create_plot_code() |>
+"library(ggplot2)\n\nggplot(cars) +\n  aes(speed, dist) #<< + \n  geom_point()" |>
   code_file_to_code_df() |>
   code_df_to_code_plot(code_plot_style_dark_mode())
 ```
 
-<img src="man/figures/README-unnamed-chunk-15-3.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-14-3.png" width="100%" />
 
 ``` r
 
@@ -515,19 +553,7 @@ create_plot_code() |>
   code_df_to_code_plot(code_plot_style_typed())
 ```
 
-<img src="man/figures/README-unnamed-chunk-15-4.png" width="100%" />
-
-``` r
-
-library(tidyverse)
-#
-ggplot(cars) + 
-  aes(speed, dist) + 
-  geom_point() + 
-  geom_smooth() #<<
-```
-
-<img src="man/figures/README-unnamed-chunk-16-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-14-4.png" width="100%" />
 
 ## `ggram:::clearhistory()` lets you clear your history using code, but you can also do this in your IDE
 
@@ -549,28 +575,28 @@ clearhistory <- function(){
 <details>
 
 ``` r
-get_code <- function(code = NULL){
-  
-  # 1. get code from history if not provided
-  if(is.null(code)){
-  
-    # 1.a Get code from history
-    temp <- tempfile()
-    savehistory(file = temp)
-  
-    # 1.b remove ggram line and collapse
-    readLines(temp)[!stringr::str_detect(readLines(temp), "ggram")] |>  
-    paste(collapse = "\n")
-    
-  }else{
-    
-    code |> paste(collapse = "\n")
-    
-    }
-  
-}
+# get_code <- function(code = NULL){
+#   
+#   # 1. get code from history if not provided
+#   if(is.null(code)){
+#   
+#     # 1.a Get code from history
+#     temp <- tempfile()
+#     savehistory(file = temp)
+#   
+#     # 1.b remove ggram line and collapse
+#     readLines(temp)[!stringr::str_detect(readLines(temp), "ggram")] |>  
+#     paste(collapse = "\n")
+#     
+#   }else{
+#     
+#     code |> paste(collapse = "\n")
+#     
+#     }
+#   
+# }
 
-specify_code_plot <- function(code, code_style_args = list()){
+specify_code_plot <- function(code = NULL, code_style_args = list()){
   
   code_df <- code |> 
     code_file_to_code_df()
@@ -611,6 +637,13 @@ specify_textoutput_plot <- function(output){
 
 </details>
 
+``` r
+create_plot_code() |>
+  specify_code_plot()
+```
+
+<img src="man/figures/README-unnamed-chunk-15-1.png" width="100%" />
+
 ### user-facing ggram and friends
 
 ``` r
@@ -619,28 +652,41 @@ ggram <- function(title = NULL, widths = c(1,1), code = NULL,
                   code_style_args = specify_code_plot_style(),
                    output_plot = NULL, ...){
   
-  code <- code %||% clipr::read_clip()  # clip not clear history, get_code(code = code) #
   code_plot <- specify_code_plot(code, code_style_args = code_style_args)
-  output <- eval(parse(text = code))
+
+  code_vector <- code |> code_to_vector()
+  code_vector <- code %||% clipr::read_clip()  # clip not clear history, get_code(code = code) #
+  output <- eval(parse(text = code_vector))
+  
   output_plot <- output
-  
+  # # 
   patch_code_and_output(code_plot, output_plot, widths, title, ...)
-  
+
 }
 ```
 
 ``` r
-
 library(tidyverse)
-#
-ggplot(cars) + 
-  aes(speed, dist) + 
-  geom_point() + 
-  geom_smooth() #<<
 
+ggplot(cars) +
+  aes(speed, dist) +
+  geom_point() +
+  geom_smooth() #<<
 
 ggram("Here is my ggram")
 ```
+
+``` r
+"library(tidyverse)
+
+ggplot(cars) +
+  aes(speed, dist) +
+  geom_point() +
+  geom_smooth() #<<" |>
+  ggram(code = _, "Here is my ggram")
+```
+
+<img src="man/figures/README-unnamed-chunk-17-1.png" width="100%" />
 
 ``` r
 #' @export
@@ -661,10 +707,34 @@ knitr::include_graphics("man/figures/a_ggram.png")
 
 <img src="man/figures/a_ggram.png" width="100%" />
 
+# example with retheming…
+
+``` r
+#############
+##### CTR-C, copy target code ###
+library(tidyverse)
+#
+ggplot(cars) + 
+  aes(speed, dist) + 
+  geom_point() + 
+  geom_smooth() #<<
+#############
+#############
+
+my_style <- specify_code_plot_style(
+  highlight_colors = c("grey", "orange") |> alpha(.25), 
+  vline_color = "transparent", 
+  hline_color = "grey",
+  accent = NULL)
+
+ggram("Here is my ggram", code_style_args = my_style)
+```
+
 ``` r
 #' @export
 ggram_df_output <- function(title = NULL, widths = c(1.1,1), code = NULL, code_style_args = specify_code_plot_style(), ...){
   
+  code <- code |> code_to_vector()
   code <- code %||% clipr::read_clip() # get_code(code = code) # 
   code_plot <- specify_code_plot(code, code_style_args = code_style_args)
   output <- eval(parse(text = code))
@@ -712,26 +782,36 @@ usethis::use_package("tidyr")
 
 
 knitrExtra::chunk_names_get()
-#>  [1] "unnamed-chunk-1"      "unnamed-chunk-2"      "unnamed-chunk-3"     
-#>  [4] "unnamed-chunk-4"      "read"                 "unnamed-chunk-5"     
-#>  [7] "StatCode"             "unnamed-chunk-6"      "code_file_to_code_df"
-#> [10] "unnamed-chunk-7"      "stamp_notebook"       "unnamed-chunk-8"     
-#> [13] "unnamed-chunk-9"      "unnamed-chunk-10"     "unnamed-chunk-11"    
-#> [16] "code_df_to_code_plot" "unnamed-chunk-12"     "unnamed-chunk-13"    
-#> [19] "unnamed-chunk-14"     "unnamed-chunk-15"     "unnamed-chunk-16"    
-#> [22] "clearhistory"         "helpers"              "ggram"               
-#> [25] "unnamed-chunk-17"     "ggram_save"           "unnamed-chunk-18"    
-#> [28] "unnamed-chunk-19"     "ggram_df_output"      "unnamed-chunk-20"    
-#> [31] "unnamed-chunk-21"     "unnamed-chunk-22"     "unnamed-chunk-23"    
-#> [34] "unnamed-chunk-24"     "unnamed-chunk-25"     "unnamed-chunk-26"    
-#> [37] "unnamed-chunk-27"     "unnamed-chunk-28"     "ggram_tp_output"     
-#> [40] "unnamed-chunk-29"     "ggram_text_output"    "unnamed-chunk-30"    
-#> [43] "unnamed-chunk-31"     "unnamed-chunk-32"     "hadley"              
-#> [46] "unnamed-chunk-33"     "unnamed-chunk-34"     "gif_from_ggplots"    
-#> [49] "unnamed-chunk-35"
+#>  [1] "unnamed-chunk-1"         "unnamed-chunk-2"        
+#>  [3] "unnamed-chunk-3"         "unnamed-chunk-4"        
+#>  [5] "read"                    "unnamed-chunk-5"        
+#>  [7] "StatCode"                "create_plot_code"       
+#>  [9] "unnamed-chunk-6"         "code_file_to_code_df"   
+#> [11] "unnamed-chunk-7"         "stamp_notebook"         
+#> [13] "unnamed-chunk-8"         "unnamed-chunk-9"        
+#> [15] "unnamed-chunk-10"        "specify_code_plot_style"
+#> [17] "code_df_to_code_plot"    "unnamed-chunk-11"       
+#> [19] "unnamed-chunk-12"        "unnamed-chunk-13"       
+#> [21] "unnamed-chunk-14"        "clearhistory"           
+#> [23] "helpers"                 "unnamed-chunk-15"       
+#> [25] "ggram"                   "unnamed-chunk-16"       
+#> [27] "unnamed-chunk-17"        "ggram_save"             
+#> [29] "unnamed-chunk-18"        "unnamed-chunk-19"       
+#> [31] "unnamed-chunk-20"        "ggram_df_output"        
+#> [33] "unnamed-chunk-21"        "unnamed-chunk-22"       
+#> [35] "unnamed-chunk-23"        "unnamed-chunk-24"       
+#> [37] "unnamed-chunk-25"        "unnamed-chunk-26"       
+#> [39] "unnamed-chunk-27"        "unnamed-chunk-28"       
+#> [41] "ggram_tp_output"         "unnamed-chunk-29"       
+#> [43] "ggram_text_output"       "unnamed-chunk-30"       
+#> [45] "unnamed-chunk-31"        "unnamed-chunk-32"       
+#> [47] "hadley"                  "unnamed-chunk-33"       
+#> [49] "unnamed-chunk-34"        "gif_from_ggplots"       
+#> [51] "unnamed-chunk-35"        "unnamed-chunk-36"
 knitrExtra::chunk_to_dir(
   c("clearhistory", 
     "StatCode", 
+    "specify_code_plot_style",
     "stamp_notebook", 
     "helpers",
     "ggram", 
@@ -740,10 +820,12 @@ knitrExtra::chunk_to_dir(
     "ggram_text_output",
     "ggram_tp_output",
     "code_df_to_code_plot",
-    "ggram_save"))
+    "ggram_save",
+    "create_plot_code"))
 ```
 
 ``` r
+rm(list = ls())
 devtools::document()
 devtools::check(".")
 devtools::install(pkg = ".", upgrade = "never") 
@@ -761,7 +843,7 @@ ggram:::clearhistory()
 ```
 
 ``` r
-library(ggplot2) 
+'library(ggplot2) 
 
 cars |>
   ggplot() + 
@@ -774,36 +856,11 @@ cars |>
       alpha(.7), #<<
     accent = "orange", #<<
     base_size = 18#<< 
-    )  #<<
-
-
-ggram("ggram:: Familiar with ggplot2 v4.0's new theming?" , subtitle = "Now it's *so* easy to specify a dramatically different look and feel -- geom_*()s are responsive to \ntheming choices like the new 'paper', 'ink', 'accent' args (as well as old 'base_size')🚀📊🤯", caption = "made with {ggram}", widths = c(1,1))
+    )  #<<' |>
+  ggram(code = _, "ggram:: Familiar with ggplot2 v4.0's new theming?", subtitle = "Now it's *so* easy to specify a dramatically different look and feel -- geom_*()s are responsive to \ntheming choices like the new 'paper', 'ink', 'accent' args (as well as old 'base_size')🚀📊🤯", caption = "made with {ggram}", widths = c(1,1))
 ```
 
-``` r
-library(ggplot2) 
-
-cars |>
-  ggplot() + 
-  aes(x = speed, y = dist) + 
-  geom_point() +
-  geom_smooth() +
-  theme_classic(paper = "grey24", #<<
-                ink = "", #<<
-                base_size = 12,
-                accent = "lightblue") #<<
-  
-  
-   |>
-        ggfx::with_outer_glow("magenta", 
-                          sigma = 10) +
-  aes(size = 9 |> I()) + 
-  aes(color = "grey24" |> I()) +
-
-
-
-ggram("ggplot2 v4.0's new theming to write ggblackboard?" , subtitle = "ggplot2 v4.0's new theming control over geom_*()s and stat_*()s color via paper ink accent,")
-```
+<img src="man/figures/README-unnamed-chunk-27-1.png" width="100%" />
 
 ``` r
 knitr::knit_exit()
